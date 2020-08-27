@@ -53,8 +53,8 @@ TCP位于传输层，提供可靠的字节流服务。为了更容易传输大�
 为了保证可靠性，采用三次握手四次挥手策略。
 
 ### 三次握手
-图示如下（图来源为https://blog.csdn.net/qq_38950316/article/details/81087809）：
-![Three-way Handshake](/img/三次握手.png)
+图示如下（图来源为https://blog.csdn.net/qq_38950316/article/details/81087809）：<br>
+![Three-way-handshake](/img/Three-way-handshake.png)
 
 1. 发送端发送带有SYN标志的数据包给接收端。（将SYN设置为1，seq为一个随机值x）
 2. 接收端收到后，回传带有SYN/ACK标志的数据包，以示传达确认信息（由标志位SYN=1知道Client请求建立连接，将标志位SYN和ACK都置为1，ack=x+1，随机产生一个值seq=y，并将该数据包发送给Client以确认连接请求）
@@ -106,7 +106,7 @@ TCP通信双方都必须维护一个序列号，它的作用是：
 四次挥手是为了双方都可以主动断开连接，断开连接后主机中的「资源」将被释放。
 
 图示如下：<br>
-![four-way handshake](/img/四次挥手.jpeg)
+![four-way-handshake](/img/four-way-handshake.jpeg)
 
 每个方向都需要一个 FIN 和一个 ACK，因此通常被称为四次挥手。这里一点需要注意是：主动关闭连接的，才有 TIME_WAIT 状态。
 为什么挥手需要四次？
