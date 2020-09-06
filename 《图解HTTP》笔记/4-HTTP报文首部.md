@@ -139,7 +139,7 @@ HTTP首部存放的是客户端和服务端分别处理请求/响应需要的信
 
 ### 请求首部字段
 请求首部用于补充请求的附加信息、客户端信息、对响应内容的优先级等。请求首部一览表：<br>
-![request-header-field](img/req-header-filed.png)
+![request-header-field](img/req-header-field.png)
 
 #### 1. Accept
   通知服务器，用户代理（User Agent，用户代理并不是仅指浏览器，还包括搜索引擎。它是由浏览器和搜索引擎及其所处硬件平台、系统软件、应用软件等所组成的一个用户环境。用户代理字段，被广泛用来标识浏览器客户端信息）能够处理的媒体类型及媒体类型的优先处理级。形如type/subtype，逗号隔开各个类型：
@@ -174,7 +174,7 @@ HTTP首部存放的是客户端和服务端分别处理请求/响应需要的信
 
 #### 5. Authorization
   告知服务器，用户代理的认证信息（证书值）。
-  
+
   在接收到需要HTTP认证信息的401响应码后，用户代理会把Authorization字段加入请求：<br>
   ![authorization](img/authorization.png)
 
@@ -191,22 +191,27 @@ HTTP首部存放的是客户端和服务端分别处理请求/响应需要的信
   形如If-xxx的为条件请求，当服务器判定条件成立时，才会执行请求.
 
   If-Match：
+
   告知服务器匹配资源所用的实体标记值。实体标记（ETag）是与特定资源关联的确定值。资源更新后ETag也会随之更新。只有当 If-Match 的字段值跟 ETag 值匹配一致时，服务器才会接受请求 ，反之返回412 Precondition Failed 。当指定值为*时，服务器忽略ETag值，只有资源存在就处理。
 
 
   If-None-Match：
+
   与If-Match相反，当与Etag字段值不一样时可处理请求。
 
 
   If-Modified-Since：
+
   在If-Modified-Since指定的日期之后，资源发生了更新，服务器就接受请求，反之返回304 Not Modifined
 
 
   If-Unmodified-Since：
+
   与上面相反，在指定日期之后，如果资源没有更新，则服务器处理请求。否则返回412 Precondition Failed
 
 
   If-Range：
+
   如果If-Range值与Etag值，或者更新日期时间，匹配一致时请求处理。反之返回全体资源。
 
   如果不使用If-Range，就请求部分资源（使用Range），如果资源更新了，那么部分请求则无效，这时服务器返回412 Precondition Failed。其目的是催促客户端再次发送请求，这样就请求了两次。
@@ -382,14 +387,14 @@ cookie首部字段：
   ![set-cookie1](img/set-cookie1.png)
   ![set-cookie2](img/set-cookie2.png)
 
-  expires属性
+  ##### expires属性
 
   指定cookie有效期。不指定时cookie在关闭浏览器后失效
 
   另外，一旦cookie从服务器发送给客户端，客户端就不能显示地删除cookie，只能通过修改expires使其过期才删除（或者令Max-age为0）
 
 
-  path属性
+  ##### path属性
 
   url 路径前缀，该路径下的页面可以访问该 cookie。
 
@@ -398,14 +403,14 @@ cookie首部字段：
   通常置为根目录：path=/，以使 cookie 对此网站的所有页面可见
 
 
-  domian属性
+  ##### domian属性
 
   可访问 cookie 的域，比如domain=site.com。
 
   默认不设置domain的情况下，在site.com设置的cookie只能在site.com获取，在xx.site.com也是无法访问的，如果想要设置为可访问，可以设置    domain = site.com    ，这样使 cookie 可以被在任何子域 *.site.com 访问
 
 
-  Secure、HttpOnly属性
+  ##### Secure、HttpOnly属性
   默认情况下，cookie基于域的，不区分协议，故http/https协议下都可以获取cookie。
   如果一个 cookie 包含绝不应该通过未加密的 HTTP 协议发送的敏感内容，那么就应该设置这个选项：
   ```
@@ -420,7 +425,7 @@ cookie首部字段：
   ```
 
 
-  samesite属性
+  ##### samesite属性
 
   samesite允许服务器要求某个cookie在跨站请求时不会被发送，作用是防止CSRF (XSRF) 攻击
 
@@ -439,16 +444,15 @@ cookie首部字段：
   和 strict 模式类似，当从外部来到网站，则禁止浏览器发送 cookie，但是增加了一个例外。
 
   如果以下两个条件均成立，则会发送 samesite=lax cookie：
-
-    1.HTTP 方法是“安全的”（例如 GET 方法，而不是 POST）。
-
-    2.该操作执行顶级导航（更改浏览器地址栏中的 URL）
+  - HTTP 方法是“安全的”（例如 GET 方法，而不是 POST）。
+  - 该操作执行顶级导航（更改浏览器地址栏中的 URL）
     如果导航是在一个 iframe中执行的，那么它就不是顶级的
 
 
 
 #### 2. cookie
   通过在请求中包含从服务器接收的cookie信息，获得HTTP状态管理支持
+
   接收到多个Cookie时，同样可以以多个cookie形式发送
 
 
@@ -457,7 +461,9 @@ cookie首部字段：
 
 #### 1. X-Frame-Options（属于响应首部）
   用于控制网站内容在其他Web网站的Frame标签内的显示问题
+
   目的是为了防止点击劫持攻击（clickjacking）（利用iframe标签的透明属性，将透明页面置于原网页上面，在用户不小心点击时进行一些操作）
+  
   X-Frame-Options可指定的字段值：
   - NENY：
   该页面不允许在frame中显示
