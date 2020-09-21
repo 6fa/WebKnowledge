@@ -53,7 +53,7 @@ defer: <br>
 ![script-defer](img/script-defer.png)
 
 async: <br>
-![async-defer](img/async-defer.png)
+![script-async](img/script-async.png)
 
 对于defer，文档构建不受影响，文档解析完毕再执行脚本。DOMContentLoaded事件会在脚本执行后再触发；
 对于async，浏览器不必等脚本下载和执行完再加载文档，只要文档加载、解析完毕，DOMContentLoaded事件则触发
