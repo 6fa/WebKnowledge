@@ -21,3 +21,4 @@
 ##### [2. JS执行机制](JS基础/JS执行机制.md)
 ##### [3. DOMContentLoaded事件](JS基础/DOMContentLoaded事件.md)
 ##### [4. JS作用域](JS基础/JS作用域.md)
+##### [5. ES6中的Class](JS基础/ES6中的Class.md)
