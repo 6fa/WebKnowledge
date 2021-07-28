@@ -54,7 +54,6 @@ TCP位于传输层，提供可靠的字节流服务。为了更容易传输大�
 
 ### 三次握手
 图示如下（图来源为https://blog.csdn.net/qq_38950316/article/details/81087809 ）：<br>
-
 ![Three-way-handshake](img/Three-way-handshake.png)
 
 1. 发送端发送带有SYN标志的数据包给接收端。（将SYN设置为1，seq为一个随机值x）
