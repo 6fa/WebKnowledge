@@ -53,7 +53,8 @@ TCP位于传输层，提供可靠的字节流服务。为了更容易传输大�
 为了保证可靠性，采用三次握手四次挥手策略。
 
 ### 三次握手
-图示如下（图来源为https://blog.csdn.net/qq_38950316/article/details/81087809）：<br>
+图示如下（图来源为https://blog.csdn.net/qq_38950316/article/details/81087809 ）：<br>
+
 ![Three-way-handshake](img/Three-way-handshake.png)
 
 1. 发送端发送带有SYN标志的数据包给接收端。（将SYN设置为1，seq为一个随机值x）
@@ -74,10 +75,10 @@ TCP位于传输层，提供可靠的字节流服务。为了更容易传输大�
 常见问题：
 
 为什么是三次握手而不是两次或四次呢？为什么三次握手可以保证可靠性？<br>
-（参考 <br>
-https://www.zhihu.com/question/271701044 <br>
-https://www.cnblogs.com/linguoguo/p/12294704.html <br>
-）
+  （参考 <br>
+  https://www.zhihu.com/question/271701044 <br>
+  https://www.cnblogs.com/linguoguo/p/12294704.html <br>
+  ）
 
 - 三次握手才可以阻止重复历史连接的初始化（主要原因）
 - 三次握手才可以同步双方的初始序列号
