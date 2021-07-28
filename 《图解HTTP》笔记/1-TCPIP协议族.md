@@ -73,7 +73,9 @@ TCP位于传输层，提供可靠的字节流服务。为了更容易传输大�
 
 常见问题：
 为什么是三次握手而不是两次或四次呢？为什么三次握手可以保证可靠性？
-（参考https://www.zhihu.com/question/271701044，及https://www.cnblogs.com/linguoguo/p/12294704.html）
+（参考 <br>
+https://www.zhihu.com/question/271701044 <br>
+https://www.cnblogs.com/linguoguo/p/12294704.html）
 
 - 三次握手才可以阻止重复历史连接的初始化（主要原因）
 - 三次握手才可以同步双方的初始序列号
