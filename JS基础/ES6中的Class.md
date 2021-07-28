@@ -10,7 +10,7 @@
 
 传统的面向类的语言中，父类和子类、子类和实例之间其实是复制操作。但是JS中没有复制，而是通过原型链来实现class。
 
-在 JavaScript 中，类是一种函数。用 typeof  验证为 function。
+在 JavaScript 中，类是一种函数，用 typeof  验证为 function。
 声明class 时所做的事：
 
 ```javascript
@@ -74,7 +74,7 @@ alert(MyClass); // error，MyClass 在外部不可见
 
 
 class字段：
-之前，类仅具有方法。“类字段”是一种允许添加任何属性的语法。
+“类字段”是一种允许添加任何属性的语法。
 
 例如，让我们在 class User 中添加一个 name 属性：
 ```javascript
@@ -86,10 +86,14 @@ class User {
   }
 }
 
-new User().sayHi();// Hello, Anonymous
+let user = new User();
+
+user().sayHi();// Hello, Anonymous
 
 alert(User.prototype.sayHi); // 被放在 User.prototype 中
 alert(User.prototype.name); // undefined，没有被放在 User.prototype 中
+
+alert(user.name);//"Anonymous"  类字段不仅在类上，也在实例上
 ```
 
 class字段是很有用的，可以使用class字段解决this丢失问题。
