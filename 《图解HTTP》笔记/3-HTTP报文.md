@@ -58,7 +58,7 @@ Content-Type: image/jpeg
 
 ```
 
-（上面内容参考https://www.zhihu.com/question/263752229）
+（上面内容参考https://www.zhihu.com/question/263752229 ）
 
 
 ### 多部分对象集合（发送多种数据）
