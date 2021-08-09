@@ -24,3 +24,6 @@
 ##### [5. HTTPS](《图解HTTP》笔记/5-HTTPS.md)
 ##### [6. 身份认证](《图解HTTP》笔记/6-身份认证.md)
 ##### [7. 基于HTTP的功能追加协议](《图解HTTP》笔记/7-基于HTTP的功能追加协议.md)
+
+## TypeScript基础
+#### [TypeScript基础](TypeScript基础/TS基础.md)
