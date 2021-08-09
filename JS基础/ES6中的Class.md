@@ -41,17 +41,17 @@ alert(Object.getOwnPropertyNames(User.prototype)); // constructor, sayH
 
 <em>和function Foo() 的区别：</em>
 
-1)class必须通过new 调用，function Foo可以用Foo.call(obj)
+1.class必须通过new 调用，function Foo可以用Foo.call(obj)
 
 通过 class 创建的函数具有特殊的内部属性标记 [[FunctionKind]]:"classConstructor"。因此，它与手动创建并不完全相同。不像普通函数，调用类构造器时必须要用 new 关键词
 
-2) function foo是可以提升的，class不行
+2.function foo是可以提升的，class不行
 
-3）全局作用域中的class Foo创建了这个作用域的一个词法标识符Foo，但是和function foo不一样，并没有创建一个同名的全局对象属性
+3.全局作用域中的class Foo创建了这个作用域的一个词法标识符Foo，但是和function foo不一样，并没有创建一个同名的全局对象属性
 
-4) 类方法不可枚举。 类定义将 "prototype" 中的所有方法的 enumerable 标志设置为 false。
+4.类方法不可枚举。 类定义将 "prototype" 中的所有方法的 enumerable 标志设置为 false。
 
-5) 类总是使用 use strict。 在类构造中的所有代码都将自动进入严格模式。
+5.类总是使用 use strict。 在类构造中的所有代码都将自动进入严格模式。
 
 
 ### 2.class基本语法
@@ -93,7 +93,7 @@ user().sayHi();// Hello, Anonymous
 alert(User.prototype.sayHi); // 被放在 User.prototype 中
 alert(User.prototype.name); // undefined，没有被放在 User.prototype 中
 
-alert(user.name);//"Anonymous"  类字段不仅在类上，也在实例上
+alert(user.name);//"Anonymous"  类字段在实例上
 ```
 
 class字段是很有用的，可以使用class字段解决this丢失问题。
