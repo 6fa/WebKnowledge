@@ -1,6 +1,6 @@
 # TypeScript基础
 
-## TypeScript安装与使用
+## 1.TypeScript安装与使用
 __安装TypeScript:__
 
 ```
@@ -44,7 +44,7 @@ npm install -D tslib @types/node
 这样可以直接运行ts文件：ts-node demo.js
 
 
-## 类型注解
+## 2.类型注解
 类型注解用来约束变量或函数的类型，注解方式为变量后跟冒号和TS类型。
 
 如将num规定为数字类型：
@@ -59,7 +59,7 @@ num = '123'
 //error TS2322: Type 'string' is not assignable to type 'number'.
 ```
 
-## 基础类型
+## 3.基础类型
 TypeScript的类型和JavaScript类型有很多相似的，比如boolean、number、string等类型，此外还有其他独特的类型如枚举类型。
 
 #### 3.1布尔、数字、字符串
@@ -238,3 +238,181 @@ let p1 = createPerson({
 ```
 
 为了方便阅读，一般将它提取出来，这时候就用到了ts中的接口（interface）。
+
+
+## 4.接口
+#### 4.1接口特性
+使用接口重写上面的例子：
+
+```
+interface person {
+  name: string;		//注意不是逗号是分号
+  age: number;
+}
+
+function createPerson(o: person){}
+
+//如果不符合接口描述则报错
+let p1 = createPerson({
+  name: "John",
+  age: "18", //报错
+})
+```
+
+接口里面的属性是必须包括的，如果想让属性可选，可以设置“option bags”模式，即在可选属性后面加上？：
+
+```
+interface person {
+  name: string;
+  age: number;
+  career?: string; //可选
+}
+
+function createPerson(o: person){}
+  
+//报错，属性没有包括age
+ let p1 = createPerson({
+  name: "John"
+})
+ 
+ //没有包括可选属性，正常运行
+let p2 = createPerson({
+  name: "John",
+  age:18
+})
+```
+
+也可以给属性设置成只读模式：
+
+```
+interface person {
+  name: string;
+  age: number;
+  readonly gender: string; //只读属性，不能被修改
+}
+```
+
+如果想添加接口里面没定义的属性，而且绕过类型检查，可以添加一个字符串索引签名：
+
+```
+interface person {
+  name: string;
+  age: number;
+  [propName: string]: any; //这样person可以有其他任意数量的额外属性，且可以是任意类型
+}
+
+function createPerson(o: person){}
+let p1 = createPerson({
+  name: "John",
+  age: 18,
+  stature: 180,  //正常运行
+  gender: "male"
+})
+```
+
+接口也可以定义方法：
+
+```
+interface person {
+  name: string;
+  age: number;
+  sayHi(): string; //表示必须要有sayHi方法，且返回值是字符串
+  exercise(time: number); //表示必须要有exercise方法，且参数是number类型
+}
+```
+
+#### 4.2可索引类型与索引签名
+前面提到了索引签名，索引签名是用来描述可索引类型的。
+可索引类型是指 可以通过索引取得值 的类型，比如 a[10] 或 ageMap["daniel"]。
+
+例子：
+接口StringArray中有一个索引签名，它表示通过number去索引StringArray时，可以取得string类型的返回值
+
+```
+interface StringArray {
+  [index: number]: string;
+}
+
+let myArray: StringArray = ["Bob", "Fred"];
+
+//通过number去索引，返回值是string类型
+let myStr: string = myArray[0];
+```
+
+ts只支持字符串索引和数字索引。可以将索引设置为只读，防止赋值：
+
+```
+interface ReadonlyStringArray {
+    readonly [index: number]: string;
+}
+let myArray: ReadonlyStringArray = ["Alice", "Bob"];
+myArray[2] = "Mallory"; // 报错
+```
+
+#### 4.3接口与函数类型
+接口除了能描述带属性的普通对象外，也能描述函数和类。
+
+描述函数类型的接口要有一个调用签名，表示函数的参数列表和返回值类型：
+
+```
+interface person {
+  (name: string, age: number): string;
+}
+
+let createPerson: person;
+createPerson = function(name: string, age: number){
+  return `my name is ${name}`
+}
+
+//函数参数不一定要和接口定义的一样，只需要同样的位置是匹配的类型
+createPerson = function(n: string, a: number){
+  return `my name is ${n}`
+}
+
+//或者函数不用再指定参数类型，ts会推断出其类型
+createPerson = function(name, age){
+  return `my name is ${name}`
+}
+```
+
+#### 4.4接口与类类型
+需要用到implements关键字：
+
+```
+interface Person {
+  name: string;
+  age: number;
+}
+
+class Student implements Person {
+  name = "student";
+	age = 18;
+}
+```
+
+#### 4.5接口继承
+接口可以相互继承:
+
+```
+interface Person {
+  name: string;
+  age: number;
+}
+
+interface Student extends Person {
+  study(): string;
+}
+
+let student: Student = {
+  name: "John",
+  age:18,
+  study:function(){
+    return "study TypeScript"
+  }
+}
+
+//也可以继承多个接口
+interface Student extends Person1, Person2{
+  //...
+}
+```
