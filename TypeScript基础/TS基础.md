@@ -416,3 +416,168 @@ interface Student extends Person1, Person2{
   //...
 }
 ```
+
+## 5.类
+#### 5.1类字段
+ts中的类的使用和js差不多, 但是类里面的变量要声明成类字段, 一个简单的例子:
+```
+class Person {
+  greeting: string;  //ts的类字段,即类里面声明的变量
+	constructor(name: string){
+    this.greeting = `Welcome, ${name}`
+  }
+}
+
+
+let person1 = new Person("John")
+
+Person.greeting; //报错,greeting不存在于Person上
+person1.greeting; //正常运行
+```
+
+如果变量不事先声明,则报错:
+
+```
+class Person {
+	constructor(name: string){
+    this.greeting = `Welcome, ${name}` //错误,类型Person上不存在greeting
+  }
+}
+```
+
+声明类字段时顺便赋值,  效果和在constructor里赋值一样:
+
+```
+class Person {
+  name: string = "John"//类字段会绑定this,所以实例会有该属性
+}
+
+let p1 = new Person()
+console.log(p1.name); //"John"
+
+
+//和下面一样的效果
+class Person {
+  name:string; //还是要声明否则报错
+  constructor(){
+    this.name = "John"
+  }
+}
+let p1 = new Person()
+console.log(p1.name); //"John"
+```
+
+#### 5.2访问控制修饰符
+ts用public、private、protected修饰符来限制对类成员( 类、变量、方法和构造方法 )的访问。
+
+  - public
+
+  在ts里，类的成员默认为public状态，即允许在类内部和外部被访问
+
+  ```
+  class Person {
+    public name: string = "John";  
+    sayHi(){
+      console.log(`Hi, ${this.name}`) //内部访问
+    }
+  }
+
+  let person1 = new Person()
+  console.log(person1.name); //外部访问
+  ```
+
+  - private
+
+  有private修饰符的类成员为私有, 只允许在类的内部被访问, 不允许外部访问. private常用于getter,setter存取器中
+
+  ```
+  class Person {
+    private name: string = "John"; 
+    sayHi(){
+      console.log(`Hi, ${this.name}`) 
+    }
+  }
+
+  let person1 = new Person()
+  console.log(person1.name); //报错,私有属性不允许外部访问
+  person1.sayHi(); //"Hi,John"
+  ```
+  ```
+  //private在getter,setter中的使用
+  class Person {
+    private _age: number;
+    constructor(a:number){
+      this._age = a
+    }
+
+    get age(){
+      return this._age - 10
+    }
+    set age(age:number){
+      this._age = age + 10
+    }
+  }
+  ```
+
+  - protected
+
+  protected成员与private类似,  但是protected可以在派生类中被访问. 即protected只能在类中和子类中被访问
+
+  ```
+  class Person {
+    public name: string = "Rose"; 
+    private age: number = 18;
+    protected gender: string = "female";
+  }
+
+  class Girl extends Person {
+    public getName(){
+      console.log(this.name) 
+    }
+    public getAge(){
+      console.log(this.age)//报错,私有属性只能在Person中被访问
+    }
+    public getGender(){
+      console.log(this.gender) //正常运行
+    }
+  }
+  ```
+
+#### 5.3构造器
+构造器的参数属性, 可以定义的同时并初始化一个变量:
+
+```
+//参数属性必须要在前面加上一个访问限定符
+//比如public,private,protected , 或者只读readonly修饰符
+class Book {
+  type: string = "Art";
+	constructor(public title: string){} //等同于this.title = title
+}
+
+let book = new Book("艺术与美")
+console.log(book.type) //"Art"
+console.log(book.title) //"艺术与美"
+```
+
+#### 5.4抽象类
+抽象类只用作其他类的基类, 不能实例化,  关键字为abstract
+
+```
+abstract class BaseBook {}
+class Art extends BaseBook{}
+
+let book = new baseBook() //错误,不能实例化抽象类
+```
+
+抽象类中可以有抽象方法, 抽象方法只能在派生类中被实现:
+
+```
+abstract class BaseBook {
+  abstract getType(): string;
+}
+class Art extends BaseBook{
+  getType():string{
+    return "art"
+  }
+}
+```
