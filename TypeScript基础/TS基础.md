@@ -1,13 +1,17 @@
 # TypeScript基础
 
 [1.TypeScript安装与使用](#1)
+
 [2.类型注解](#2)
+
 [3.基础类型](#3)
+
 [4.接口](#4)
+
 [5.类](#5)
 
-## 1.TypeScript安装与使用
 <span id="1"></span>
+## 1.TypeScript安装与使用
 __安装TypeScript:__
 
 ```
@@ -50,9 +54,8 @@ npm install -D tslib @types/node
 
 这样可以直接运行ts文件：ts-node demo.js
 
-
-## 2.类型注解
 <span id="2"></span>
+## 2.类型注解
 类型注解用来约束变量或函数的类型，注解方式为变量后跟冒号和TS类型。
 
 如将num规定为数字类型：
@@ -67,8 +70,8 @@ num = '123'
 //error TS2322: Type 'string' is not assignable to type 'number'.
 ```
 
-## 3.基础类型
 <span id="3"></span>
+## 3.基础类型
 TypeScript的类型和JavaScript类型有很多相似的，比如boolean、number、string等类型，此外还有其他独特的类型如枚举类型。
 
 #### 3.1布尔、数字、字符串
@@ -248,9 +251,8 @@ let p1 = createPerson({
 
 为了方便阅读，一般将它提取出来，这时候就用到了ts中的接口（interface）。
 
-
-## 4.接口
 <span id="4"></span>
+## 4.接口
 #### 4.1接口特性
 使用接口重写上面的例子：
 
@@ -427,8 +429,8 @@ interface Student extends Person1, Person2{
 }
 ```
 
-## 5.类
 <span id="5"></span>
+## 5.类
 #### 5.1类字段
 ts中的类的使用和js差不多, 但是类里面的变量要声明成类字段, 一个简单的例子:
 ```
