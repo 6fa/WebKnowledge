@@ -10,6 +10,8 @@
 
 [5.类](#5)
 
+[6.函数](#6)
+
 <span id="1"></span>
 ## 1.TypeScript安装与使用
 __安装TypeScript:__
@@ -591,6 +593,87 @@ abstract class BaseBook {
 class Art extends BaseBook{
   getType():string{
     return "art"
+  }
+}
+```
+
+<span id="6"></span>
+## 6.函数
+#### 6.1为函数定义类型
+函数类型由函数参数和返回值组成
+
+函数声明形式:
+
+```
+//函数的返回值是number,参数也是number
+function add(a:number,b:number): number{
+  return a + b
+}
+```
+
+函数表达式形式:
+
+```
+let addFn = function (a:number, b:number): number{
+  return a + b
+}
+//完整的类型应该这样写
+let addFn: (aVal: number,bVal: number) => {
+  number = function(a: number,b: number): number{return a + b}
+}
+```
+
+如果函数没有返回值则为void类型, 不建议留空:
+
+```
+function add(a:number, b:number):void{
+  a + b
+}
+```
+
+#### 6.2函数参数为对象时
+当函数参数是对象时,定义参数类型:
+
+```
+//错误写法
+function add({x: number, y: number, z: number}): number{
+  return	x + y + z
+}
+
+//正确写法
+function add({x,y,z}: {x: number, y: number, z: number}){
+  return x + y + z
+}
+//或者
+function add(obj: {x: number, y: number, z: number}){
+  return obj.x + obj.y + obj.z
+}
+```
+
+#### 6.3函数重载
+函数重载指的是根据不同的参数返回不同类型的数据:
+
+```
+function getData(type){
+  if(typeof type === "number"){
+    return [1,2,3]
+  }else if(typeof type === "string"){
+    return {a:"1",b:"2",c:"3"}
+  }
+}
+```
+
+在ts里这样约束函数重载的类型:
+
+```
+function getDate(x:string):number[];
+function getData(x:number):{a:string,b:string,c:string};
+
+function getData(x:any):any{
+  if(typeof type === "number"){
+    return [1,2,3]
+  }else if(typeof type === "string"){
+    return {a:"1",b:"2",c:"3"}
   }
 }
 ```
