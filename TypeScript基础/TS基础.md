@@ -14,6 +14,7 @@
 
 <span id="1"></span>
 ## 1.TypeScript安装与使用
+
 __安装TypeScript:__
 
 ```
@@ -25,9 +26,10 @@ npm install -D typescript
 ```
 
 __使用TypeScript:__
+
 新建文件demo1.ts
 
-```
+```TypeScript
 function test(){
   let str: string = "learn TypeScript"
   console.log(str)
@@ -41,6 +43,7 @@ test();
 `"learn TypeScript"`
 
 __使用ts-node:__
+
 每次都要先用tsc转换成js文件比较麻烦，可以安装ts-node插件: 
 
 ```
