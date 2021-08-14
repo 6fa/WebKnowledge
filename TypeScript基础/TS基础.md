@@ -62,7 +62,7 @@ npm install -D tslib @types/node
 
 如将num规定为数字类型：
 
-```
+```TypeScript
 let num: number;
 
 //如果将num赋值为字符串，则ts报错
@@ -77,7 +77,7 @@ num = '123'
 TypeScript的类型和JavaScript类型有很多相似的，比如boolean、number、string等类型，此外还有其他独特的类型如枚举类型。
 
 #### 3.1布尔、数字、字符串
-```
+```TypeScript
 //布尔类型
 let flag: boolean = true;
 
@@ -91,7 +91,7 @@ let name: string = 'John'
 #### 3.2数组、元组
 有两种方式定义数组类型：
 
-```
+```TypeScript
 //在元素类型后接上[]
 //表示数组内的元素都是某类型
 let list1: number[] = [1,2,3]
@@ -104,7 +104,7 @@ let list2: Array<string> = ["1","2","3"]
 
 元组类型指数组的元素的类型可以不同，比如数组的元素可以同时有string和number类型，但是对应位置的类型必须相同：
 
-```
+```TypeScript
 let arr: [string, number];
 arr = ['1', 1] 
 arr = [1, '1'] //会报错，对应位置的类型不匹配
@@ -113,7 +113,7 @@ arr = [1, '1'] //会报错，对应位置的类型不匹配
 #### 3.3枚举类型
 枚举类型用于为一组数值定义名称，来方便使用这组数值。关键字为enum：
 
-```
+```TypeScript
 //默认元素从0开始编号, 所以这里数值0的名称为0
 enum Color {red, green, blue}
 //等同于
@@ -129,7 +129,7 @@ enum Color {red = 2, green, blue}
 
 枚举类型的使用：
 
-```
+```TypeScript
 //由枚举的数值取得对应的名称
 enum Color {red, green, blue}
 let color = Color[0]; 
@@ -159,7 +159,7 @@ any类型的适用情况：
 #### 3.5Void类型
 void类型表示没有类型，常用于没有返回值的函数中，表示函数没有返回值，如果之后加入返回值则报错：
 
-```
+```TypeScript
 //在函数名后加类型，表示函数返回值的类型
 function sayHello(): void(){
   console.log("hello");
@@ -171,14 +171,14 @@ function sayHello(): void(){
 #### 3.6Null 和 Undefined 类型
 null和undefiend类型的值只能是它们本身：
 
-```
+```TypeScript
 let u: undefined = undefined;
 let n: null = null;
 ```
 
 但是null和undefined是其他类型（包括void）的子类型，所以可以把它们赋值给其他任意类型：
 
-```
+```TypeScript
 //注意是没有启用严格空校验（--strictNullChecks标记）的情况下
 let x: number = 10;
 x = null; 
@@ -198,13 +198,13 @@ never类型是其他类型（包括undefined和null）的子类型，表示从�
 出现never类型的场景：
 
   - 函数无法执行到终点，如无限循环，则函数返回值为never类型
-  ```
+  ```TypeScript
   function loop():never{
     while(true){}
   }
   ```
   - 函数抛出异常
-  ```
+  ```TypeScript
   function error():never{
     throw new Error("errMessage")
   }
@@ -220,7 +220,7 @@ ts中对象类型的形式可以是：
   - 类类型
   - 函数类型
 
-  ```
+  ```TypeScript
   //将函数的参数设置为object类型
   function createPerson(obj: object){}
 
@@ -242,7 +242,7 @@ ts中对象类型的形式可以是：
 
 但是上面这种直接指定为object类型用处不大，可以分别指定对象里面的属性类型：
 
-```
+```TypeScript
 function createPerson(obj: {name: string, age: number}){}
 
 let p1 = createPerson({
@@ -258,7 +258,7 @@ let p1 = createPerson({
 #### 4.1接口特性
 使用接口重写上面的例子：
 
-```
+```TypeScript
 interface person {
   name: string;		//注意不是逗号是分号
   age: number;
@@ -275,7 +275,7 @@ let p1 = createPerson({
 
 接口里面的属性是必须包括的，如果想让属性可选，可以设置“option bags”模式，即在可选属性后面加上？：
 
-```
+```TypeScript
 interface person {
   name: string;
   age: number;
@@ -298,7 +298,7 @@ let p2 = createPerson({
 
 也可以给属性设置成只读模式：
 
-```
+```TypeScript
 interface person {
   name: string;
   age: number;
@@ -308,7 +308,7 @@ interface person {
 
 如果想添加接口里面没定义的属性，而且绕过类型检查，可以添加一个字符串索引签名：
 
-```
+```TypeScript
 interface person {
   name: string;
   age: number;
@@ -326,7 +326,7 @@ let p1 = createPerson({
 
 接口也可以定义方法：
 
-```
+```TypeScript
 interface person {
   name: string;
   age: number;
@@ -342,7 +342,7 @@ interface person {
 例子：
 接口StringArray中有一个索引签名，它表示通过number去索引StringArray时，可以取得string类型的返回值
 
-```
+```TypeScript
 interface StringArray {
   [index: number]: string;
 }
@@ -355,7 +355,7 @@ let myStr: string = myArray[0];
 
 ts只支持字符串索引和数字索引。可以将索引设置为只读，防止赋值：
 
-```
+```TypeScript
 interface ReadonlyStringArray {
     readonly [index: number]: string;
 }
@@ -368,7 +368,7 @@ myArray[2] = "Mallory"; // 报错
 
 描述函数类型的接口要有一个调用签名，表示函数的参数列表和返回值类型：
 
-```
+```TypeScript
 interface person {
   (name: string, age: number): string;
 }
@@ -392,7 +392,7 @@ createPerson = function(name, age){
 #### 4.4接口与类类型
 需要用到implements关键字：
 
-```
+```TypeScript
 interface Person {
   name: string;
   age: number;
@@ -407,7 +407,7 @@ class Student implements Person {
 #### 4.5接口继承
 接口可以相互继承:
 
-```
+```TypeScript
 interface Person {
   name: string;
   age: number;
@@ -435,7 +435,7 @@ interface Student extends Person1, Person2{
 ## 5.类
 #### 5.1类字段
 ts中的类的使用和js差不多, 但是类里面的变量要声明成类字段, 一个简单的例子:
-```
+```TypeScript
 class Person {
   greeting: string;  //ts的类字段,即类里面声明的变量
 	constructor(name: string){
@@ -452,7 +452,7 @@ person1.greeting; //正常运行
 
 如果变量不事先声明,则报错:
 
-```
+```TypeScript
 class Person {
 	constructor(name: string){
     this.greeting = `Welcome, ${name}` //错误,类型Person上不存在greeting
@@ -462,7 +462,7 @@ class Person {
 
 声明类字段时顺便赋值,  效果和在constructor里赋值一样:
 
-```
+```TypeScript
 class Person {
   name: string = "John"//类字段会绑定this,所以实例会有该属性
 }
@@ -489,7 +489,7 @@ ts用public、private、protected修饰符来限制对类成员( 类、变量、
 
   在ts里，类的成员默认为public状态，即允许在类内部和外部被访问
 
-  ```
+  ```TypeScript
   class Person {
     public name: string = "John";  
     sayHi(){
@@ -505,7 +505,7 @@ ts用public、private、protected修饰符来限制对类成员( 类、变量、
 
   有private修饰符的类成员为私有, 只允许在类的内部被访问, 不允许外部访问. private常用于getter,setter存取器中
 
-  ```
+  ```TypeScript
   class Person {
     private name: string = "John"; 
     sayHi(){
@@ -517,7 +517,7 @@ ts用public、private、protected修饰符来限制对类成员( 类、变量、
   console.log(person1.name); //报错,私有属性不允许外部访问
   person1.sayHi(); //"Hi,John"
   ```
-  ```
+  ```TypeScript
   //private在getter,setter中的使用
   class Person {
     private _age: number;
@@ -538,7 +538,7 @@ ts用public、private、protected修饰符来限制对类成员( 类、变量、
 
   protected成员与private类似,  但是protected可以在派生类中被访问. 即protected只能在类中和子类中被访问
 
-  ```
+  ```TypeScript
   class Person {
     public name: string = "Rose"; 
     private age: number = 18;
@@ -561,7 +561,7 @@ ts用public、private、protected修饰符来限制对类成员( 类、变量、
 #### 5.3构造器
 构造器的参数属性, 可以定义的同时并初始化一个变量:
 
-```
+```TypeScript
 //参数属性必须要在前面加上一个访问限定符
 //比如public,private,protected , 或者只读readonly修饰符
 class Book {
@@ -577,7 +577,7 @@ console.log(book.title) //"艺术与美"
 #### 5.4抽象类
 抽象类只用作其他类的基类, 不能实例化,  关键字为abstract
 
-```
+```TypeScript
 abstract class BaseBook {}
 class Art extends BaseBook{}
 
@@ -586,7 +586,7 @@ let book = new baseBook() //错误,不能实例化抽象类
 
 抽象类中可以有抽象方法, 抽象方法只能在派生类中被实现:
 
-```
+```TypeScript
 abstract class BaseBook {
   abstract getType(): string;
 }
@@ -604,7 +604,7 @@ class Art extends BaseBook{
 
 函数声明形式:
 
-```
+```TypeScript
 //函数的返回值是number,参数也是number
 function add(a:number,b:number): number{
   return a + b
@@ -613,7 +613,7 @@ function add(a:number,b:number): number{
 
 函数表达式形式:
 
-```
+```TypeScript
 let addFn = function (a:number, b:number): number{
   return a + b
 }
@@ -625,7 +625,7 @@ let addFn: (aVal: number,bVal: number) => {
 
 如果函数没有返回值则为void类型, 不建议留空:
 
-```
+```TypeScript
 function add(a:number, b:number):void{
   a + b
 }
@@ -634,7 +634,7 @@ function add(a:number, b:number):void{
 #### 6.2函数参数为对象时
 当函数参数是对象时,定义参数类型:
 
-```
+```TypeScript
 //错误写法
 function add({x: number, y: number, z: number}): number{
   return	x + y + z
@@ -653,7 +653,7 @@ function add(obj: {x: number, y: number, z: number}){
 #### 6.3函数重载
 函数重载指的是根据不同的参数返回不同类型的数据:
 
-```
+```TypeScript
 function getData(type){
   if(typeof type === "number"){
     return [1,2,3]
@@ -665,7 +665,7 @@ function getData(type){
 
 在ts里这样约束函数重载的类型:
 
-```
+```TypeScript
 function getDate(x:string):number[];
 function getData(x:number):{a:string,b:string,c:string};
 
