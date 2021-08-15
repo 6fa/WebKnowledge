@@ -12,6 +12,9 @@
 
 [6.函数](#6)
 
+[7.联合类型与类型保护](#7)
+
+
 <span id="1"></span>
 ## 1.TypeScript安装与使用
 
@@ -677,6 +680,113 @@ function getData(x:any):any{
     return [1,2,3]
   }else if(typeof type === "string"){
     return {a:"1",b:"2",c:"3"}
+  }
+}
+```
+
+<span id="7"></span>
+## 7.联合类型和类型保护
+#### 7.1联合类型
+联合类型使用管道( | )将变量设置成多种类型, 变量可以根据类型来赋值:
+
+```TypeScript
+//变量value可以是number或者string类型
+let value: string | number; 
+
+//联合类型作为函数参数
+function getInfo(name: string | string[]){}
+
+//接口作为联合类型
+interface teacher {
+  teach():void
+}
+interface student {
+  study():void
+}
+function createPerson(person: teacher | student){
+  //...
+}
+```
+
+#### 7.2 类型保护
+在使用联合类型时, 需要明确是哪个类型才能使用它的属性/方法,可以使用类型保护.
+
+类型保护有很多方式:
+- 类型断言
+- in语法
+- typeof 语法
+- instanceof 语法
+
+##### (a)类型断言
+类型断言即通过断言的方式确定传递过来的准确值, 如下面的例子, 根据共同的属性确定类型, 断言 person as teacher 
+
+```TypeScript
+interface teacher {
+  flag:true;
+  teach():void;
+}
+interface student {
+  flag:false;
+  study():void
+}
+function createPerson(person: teacher | student){
+  if(person.flag){
+    (person as teacher).teach()
+  }else {
+    (person as student).study()
+  }
+}
+```
+
+##### (b)in语法
+```TypeScript
+interface teacher {
+  teach():void;
+}
+interface student {
+  study():void
+}
+function createPerson(person: teacher | student){
+  if("teach" in person){
+    person.teach()
+  }else if("study" in person) { //这里可以不用else if 而用else, ts会自动判断
+    person.study()
+  }
+}
+```
+
+##### (c)typeof语法
+如果函数的两个参数可以是number或string类型,如果直接相加则ts会报错
+
+```TypeScript
+function add(a: number | string, b: number | string){
+  return a + b //错误
+}
+
+//用typeof解决
+function add(a: number | string, b: number | string){
+  if(typeof a === "string" || typeof b === "string"){
+    return `${a}${b}`
+  }else {
+    return a + b
+  }
+}
+```
+
+##### (d)instanceof语法
+instanceof只能用于类上:
+
+```TypeScript
+class Teacher{
+  teach(){}
+}
+class Student{
+  study(){}
+}
+
+function person(x: Teacher | Student){
+  if(x instanceof Teacher){
+    x.teach()
   }
 }
 ```
