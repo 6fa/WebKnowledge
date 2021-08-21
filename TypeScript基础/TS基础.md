@@ -791,3 +791,89 @@ function person(x: Teacher | Student){
   }
 }
 ```
+
+<span id="8"></span>
+## 8.泛型
+#### 8.1泛型的使用
+泛型即声明的时候没定义类型，使用的时候再指定类型. 使用方式是用尖括号<>包裹自定义的类型名称,  一般用<T>
+
+假如希望函数有两个参数,均可以是字符串或者数字类型, 但是第一个参数是string的话, 第二个参数也应为string, number同理. 这时可以用泛型:
+
+```TypeScript
+//不用泛型
+function joint(x: number | string, y: number | string){
+  return `${x} ${y}`
+}
+
+//使用泛型
+function joint<T>(x: T, y: T){
+  return `${x} ${y}`
+}
+
+//第一种使用方式,指定类型
+joint< number >(1,2)
+
+//第二种使用方式,利用类型推荐,编译器根据传入的数据类型自动确定T
+joint("1", "2")
+```
+
+还可以定义多个泛型:
+
+```TypeScript
+function joint<T, P>(x: T, y: P){
+  return `${x} ${y}`
+}
+joint<number, string>(1, "2")
+```
+
+#### 8.2泛型约束/继承
+假如想把泛型约束成某几个类型:
+
+```TypeScript
+function joint<T extends string | number>(x: T, y: T){
+  return `${x} ${y}`
+}
+```
+
+或者约束成自定义接口类型:
+
+```TypeScript
+interface myType {
+  name: string
+}
+function joint<T extends myType>(x: T, y: T){
+  return `${x.name} ${y.name}`
+}
+
+joint({name: "a"}, {name: "b"}) //"a b"
+```
+
+#### 8.3泛型中数组的使用
+```TypeScript
+//第一种写法
+function add<T>(params: T[]){
+  return params.join('-')
+}
+add<string>(["1","2","3"]) //"1-2-3"
+
+//第二种写法
+function add<T>(params: Array<T>){
+  return params.join('-')
+}
+```
+
+#### 8.4类中的泛型
+泛型类与泛型函数差不多, 使用<T>跟在类名后:
+
+```TypeScript
+class handler<T> {
+  constructor(private data: T[]){};
+
+  getData(key: number):T{
+    return this.data[key]
+  }
+}
+
+let handleData = new handler<string>(["a","b","c"])
+console.log(handleData.getData(1)) //"b"
+```
