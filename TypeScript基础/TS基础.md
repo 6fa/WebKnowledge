@@ -877,3 +877,151 @@ class handler<T> {
 let handleData = new handler<string>(["a","b","c"])
 console.log(handleData.getData(1)) //"b"
 ```
+
+<span id="9"></span>
+## 9.模块与命名空间
+#### 9.1 模块
+包含顶级import或者export的文件会被当作一个模块, 如果文件顶级不带import或者export,则文件对全局可见, 意味着里面的变量, 函数, 类等等对外可见.
+
+模块在执行之前, 通过模块加载器加载其他模块, 形成模块所有依赖关系.  常见的模块加载器有CommonJs( 服务于Node.js ),  Require.js ( 服务于Web应用 ),  ES6的模块加载系统.
+
+#### 9.2 TS中的模块使用
+ts中的模块使用和es6自带的模块系统很类似.
+
+导出：
+
+```TypeScript
+//通过export关键字导出
+export const name = "TypeScript"
+export interface person {}
+
+//默认导出
+export default function(){}
+
+//导出重命名
+class Person {}
+export {Human as Person}
+
+//重新导出
+export person from './TSModule.ts'
+```
+
+导入：
+
+```TypeScript
+import {name} from "./name.ts"
+
+//重命名
+import {nameVal as name} from "./name.js"
+
+//将整个模块导入一个变量
+import * as data from "./data.ts"
+```
+
+#### 9.3 生成模块代码
+通过指定模块目标参数, 可以将ts模块代码生成想要的模块系统的代码:
+
+```TypeScript
+//'--module' 选项必须是以下之一
+//'none', 'commonjs', 'amd', 'system', 'umd', 'es6', 'es2015', 'es2020', 'esnext'
+
+//比如将demo.ts代码生成es6模块代码
+tsc --module es6 demo.ts
+```
+
+#### 9.4 命名空间
+命名空间和模块化思想很像, 都是为了有自己的环境, 不产生全局变量污染环境.
+
+命名空间定义了标识符的可见范围, 同样的标识符在不同的命名空间互不干扰. 使用namespace定义:
+
+```TypeScript
+namespace space1 {
+  let name = "Jack"
+}
+namespace space2{
+  let name = "Rose"
+}
+```
+
+如果要调用命名空间里面的类和接口,  需要在命名空间里用export导出:
+
+```TypeScript
+namespace space1 {
+  export class someClass{}
+  export function getName(){
+    return "Jack"
+  }
+}
+space1.getName()
+```
+
+一般项目中会单独写一个components文件, 进行组件化:
+
+```TypeScript
+//src/components.ts
+namespace Components {
+  export class Header {}
+
+  export class Content {}
+
+  export class Footer {}
+}
+```
+
+命名空间可以嵌套:
+
+```TypeScript
+
+namespace Components {
+  export namespace SubComponents {
+    export class Test {}
+  }
+
+  //...
+}
+```
+
+对于多文件中的命名空间, 需要使用三个斜杠引用文件:
+
+```TypeScript
+//下面三个文件中的命名空间有相同的名称animal,其实是同一个命名空间,export的东西相同则报错
+//space1.ts
+namespace animal {
+  export function eat(){}
+}
+
+//space2.ts
+namespace animal {
+  export function fly(){}
+}
+
+//space3.ts
+namespace animal {
+  export function sleep(){}
+}
+
+//index.ts
+//引用其他三个文件
+///<reference path = "space1.ts" /> 
+///<reference path = "space2.ts" /> 
+///<reference path = "space3.ts" /> 
+function init(){
+  animal.eat();
+  animal.fly();
+  animal.sleep();
+}
+```
+
+在index.html里使用index.js之前, 也需要引用其他文件的js:
+
+```TypeScript
+<script src="space1.js"></script>
+<script src="space2.js"></script>
+<script src="space3.js"></script>
+ <script src="index.js"></script>
+```
+
+可以将它们编译到一个文件(sample.js):
+
+- 使用 tsc --outFile sample.js index.ts
+- 或者已有tsconfig.json文件, 将 outFile 配置项设置为 "./sample.js" . 需要注意的是配置了这个选项, 就不再支持"module" : "commonjs", 需要改成 "module" : "amd"
