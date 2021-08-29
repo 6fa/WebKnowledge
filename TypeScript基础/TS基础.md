@@ -18,6 +18,8 @@
 
 [9.模块与命名空间](#9)
 
+[10.配置文件](#10)
+
 <span id="1"></span>
 ## 1.TypeScript安装与使用
 
@@ -1027,3 +1029,18 @@ function init(){
 
 - 使用 tsc --outFile sample.js index.ts
 - 或者已有tsconfig.json文件, 将 outFile 配置项设置为 "./sample.js" . 需要注意的是配置了这个选项, 就不再支持"module" : "commonjs", 需要改成 "module" : "amd"
+
+<span id="10"></span>
+## 10.配置文件
+#### tsconfig.json文件的生成与使用
+tsconfig.json配置文件是用来指定项目的根文件和一些编译选项, 其实就是用来规定如何对ts文件进行编译的.
+
+生成tsconfig.json:
+
+```
+//在项目根目录下
+tsc --init
+```
+
+想让tsconfig.json文件生效, 在终端输入tsc xxx.ts是无效的, 它的编译并没有经过tsconfig.json.
+这是因为当命令行上指定了输入文件时，tsconfig.json文件会被忽略.  应该直接运行tsc(不带任何输入文件).  
