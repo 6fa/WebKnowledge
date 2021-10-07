@@ -518,7 +518,7 @@ export default{
 <span id="7"></span>
 ## 7. 动画
 ### 7.1 transition作为根节点
-- vue2
+- vue2<br>
 vue2使用 transition 作为模板的根节点时，在组件外部，即父组件处也可以触发过渡效果：
 ```javascript
 //子组件
@@ -533,10 +533,10 @@ vue2使用 transition 作为模板的根节点时，在组件外部，即父组�
 <child v-if="flag"></child>
 ```
 
-- vue3
+- vue3<br>
 vue3删除了这个现象，<transition>期望的是被子元素触发。
 
-- 从vue2迁移到vue3
+- 从vue2迁移到vue3<br>
 如果想在vue3中继续使用vue2的特性，可以向组件传递prop：
 ```html
 //子组件
