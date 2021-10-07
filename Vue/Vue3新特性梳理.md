@@ -16,12 +16,12 @@
 
 [8.指令](#8)
 
-[8.实例属性与方法](#8)
+[9.实例属性与方法](#9)
 
-[9.组合式API](#9)
+[10.组合式API](#10)
 
 <span id="1"></span>
-## 新特性总结
+## 1.新特性总结
 vue3和vue2对比：
  - 重写了响应式系统、重写了虚拟DOM的实现，性能上得到了提升
  - 新推出组合式API（composition API），使维护组件代码变得更简单
@@ -32,7 +32,7 @@ vue3和vue2对比：
 同时Vue3是向下兼容的，可以使用大部分的Vue2特性。
 
 <span id="2"></span>
-## 创建应用实例
+## 2.创建应用实例
 从如何创建一个Vue实例说起，Vue2通过new Vue( )创建实例，而Vue3通过Vue.createApp( )创建应用实例：
 
 ```javascript
@@ -55,7 +55,7 @@ vue3和vue2对比：
 
 注意应用实例和组件实例的区别：
 
-1.应用实例(app)：
+a.应用实例(app)：
   - Vue.createApp( )返回一个应用实例
   - 应用实例上有很多方法，比如app.component( )注册全局组件，app.directive( )注册全局指令等。而Vue2中它们是全局API，如Vue.component( )
   - 应用实例上的方法大多返回同一应用实例 (mount除外)，所以可以链式操作
@@ -67,13 +67,13 @@ vue3和vue2对比：
     .use(LocalePlugin)
   ```
 
-2.组件实例(vm)：
+b.组件实例(vm)：
   - 传递给createApp( )的选项用于配置根组件
   - 将应用实例挂载到一个DOM元素上，返回根组件实例（vm）
 
 
 <span id="3"></span>
-## 应用挂载
+## 3.应用挂载
 将应用挂载到DOM元素上时，Vue3有一点小改变：
 
   - 有设置template时，Vue2将模板内容替换目标元素，而Vue3将模板内容作为子元素插入
@@ -137,9 +137,9 @@ vue3和vue2对比：
   ```
 
 <span id="4"></span>
-## 生命周期
+## 4.生命周期
 
-### 钩子函数
+### 4.1钩子函数
 Vue3的钩子函数与Vue2相比，将beforeDestory、destoryed修改为beforeUnmount、unmounted，增加了renderTracked、renderTriggered、errorCaptured：
  - beforeCreate
  - created
@@ -185,7 +185,7 @@ Vue3的钩子函数与Vue2相比，将beforeDestory、destoryed修改为beforeUn
  - 操作页面的显示的数据（引起虚拟DOM重渲染）就会触发，触发顺序：renderTriggered - beforeUpdate
 
 
-### setup生命周期
+### 4.2setup生命周期
 setup函数里面设置生命周期函数，是为了使组合式API的功能和选项式API一样完整。
  - setup函数内部的钩子函数基本和选项式一样，只是没有beforeCreate、created，并且在函数前面加上on。
  - 因为setup函数会在beforeCreate之前就执行，即组件创建之前执行。所有beforeCreate、created的代码应该写在setup中
@@ -202,8 +202,8 @@ setup函数里面设置生命周期函数，是为了使组合式API的功能和
   ![lifeCycle](img/lifeCycle.png)
 
 <span id="5"></span>
-## 组件 & 选项
-### 注册组件
+## 5.组件 & 选项
+### 5.1注册组件
 注册组件的方法与vue2有略微差别。
 
 vue2：
@@ -254,7 +254,7 @@ const app = Vue.createApp({
 app.mount("#app") //挂载
 ```
 
-### Mixin的合并行为
+### 5.2Mixin的合并行为
 在vue2中使用Mixin，数据对象在内部会进行递归合并，并在发生冲突时以组件数据优先：
 ```javascript
 const Mixin = {
@@ -300,7 +300,7 @@ const CompA = {
 }
 ```
 
-### 新增选项：emits
+### 5.3新增选项：emits
 - 和props选项类似，props接收父组件传来的数据，emits接收组件可触发的事件：
 
 ```html
@@ -356,7 +356,7 @@ app.component('reply-form', {
 - Vue强烈建议使用使用emits记录每个组件所触发的所有事件，因为Vue3移除了.native修饰符，没有用emits记录的事件会监听器会被放到组件的$attrs，且默认绑定到组件的根元素。
 - 可以使用inheritAttrs：false，让事件还是绑定在设置监听器的元素本身上
 
-### 异步组件 
+### 5.4异步组件 
 在vue2中，异步组件通过一个返回promise的函数来创建：
 ```javascript
 Vue.component('async-component', () => import('./async-componnet.vue'))
@@ -392,7 +392,7 @@ const asyncComponent =  {
 }
 ```
 
-### Suspense
+### 5.5Suspense
 Suspense可以将异步组件提升到组件树中，当异步请求未完成时显示加载中页面，在异步请求完成后即显示该异步组件内容，简化了自己手写处理异步逻辑、显示不同页面的步骤。
 
 用法：
@@ -433,7 +433,7 @@ export default defineComponent({
 })
 ```
 
-### Teleport
+### 5.6Teleport
 一些组件，如占满全屏的对话框，如果包裹在其他组件中，就变得容易被干扰，因为样式也将包裹在其它组件中，定位容易变得混乱。
 对于这些特殊的组件，既想存在于父组件的逻辑中，又想独立于父组件从而更方便某些操作，就可以使用Teleport瞬移组件：teleport组件允许将组件挂载在任意DOM上。
 
@@ -476,8 +476,8 @@ export default app;
 ```
 
 <span id="6"></span>
-## 模板
-### 删除过滤器
+## 6.模板
+### 6.1删除过滤器
 在vue2中可以使用过滤器对模板中的数据进行一些格式化：
 ```html
 <div>{{ message | capitalize }}</div>
@@ -495,7 +495,7 @@ export default{
 ```
 在vue3中删除了过滤器语法，可以用计算属性、方法调用替换。
 
-### 片段
+### 6.2片段
 在vue2中，<template>里面只能有一个根元素：
 ```html
 <template>
@@ -512,9 +512,11 @@ export default{
   <div>...</div>
 </template>
 ```
+
+
 <span id="7"></span>
-## 动画
-### <transition>作为根节点
+## 7.动画
+### 7.1<transition>作为根节点
 - vue2
 vue2使用<transition>作为模板的根节点时，在组件外部，即父组件处也可以触发过渡效果：
 ```javascript
@@ -555,10 +557,10 @@ vue3删除了这个现象，<transition>期望的是被子元素触发。
 <child :show="flag"></child>
 ```
 
-### 过渡的类名
+### 7.2过渡的类名
 vue3将v-enter、v-leave修改为v-enter-from，v-leave-from
 
-### <transition-group>
+### 7.3<transition-group>
 - vue2
 在vue2中，<transition-group>要求有一个根元素包裹内容，默认为<span>，可通过tag属性更改：
 ```html
@@ -573,8 +575,8 @@ vue3将v-enter、v-leave修改为v-enter-from，v-leave-from
 在vue3中不再需要根节点，因为vue3支持了片段。如果依旧写上tag，那么会和vue2一样
 
 <span id="8"></span>
-## 指令
-### v-model在组件上的使用
+## 8.指令
+### 8.1v-model在组件上的使用
 - vue2
 vue2中，在子组件上绑定v-model="parentVal"，相当于：
 ```html
@@ -649,11 +651,11 @@ const child = {
 }
 ```
 
-### v-on.native
+### 8.2v-on.native
 - vue3移除了.native修饰符，在vue2中该修饰符用来表示绑定原生事件而不是自定义事件。
 - 在vue3中，可通过emits选项定义真正在子组件上会触发的事件，否则会被视为原生事件，并添加到子组件的根元素上（除非子组件设置了inheritAttrs：false）
 
-### v-bind的合并行为
+### 8.3v-bind的合并行为
 当v-bind绑定的atrribute与独立的atrribute有冲突时，会有优先级问题。
 
 在vue2中，独立的atrribute有更高的优先级：
@@ -675,9 +677,10 @@ const child = {
 <!-- 结果 -->
 <div id="red"></div>
 ```
+
 <span id="9"></span>
-## 实例属性与方法
-### $attrs 与 $listeners
+## 9.实例属性与方法
+### 9.1$attrs 与 $listeners
 $attrs和$listeners用于跨层级组件的数据传递。
 - 在vue2中，$attrs包括父组件传给子组件、不是props的attribute，且不包括class、style。
 - 在vue3中，$attrs包括父组件传给子组件、不是props和emits上的attribute，并且会包括class、style。
@@ -685,7 +688,7 @@ $attrs和$listeners用于跨层级组件的数据传递。
 - 在vue2中，$listeners是父组件中绑定的事件监听器（不包含有.native修饰符的原生事件）
 - 而vue3删除了$listners，没有通过emits接收的事件被统一放到$attrs中
 
-### $children
+### 9.2$children
 vue2可通过$children访问当前实例的直接子组件，而vue3删除了$children，如果要访问子组件实例，可以使用$refs。
 
 $refs能访问注册过ref的子组件实例或DOM元素
@@ -703,8 +706,8 @@ this.$refs.input
 ```
 
 <span id="10"></span>
-## 组合式API
-### 为什么需要组合式API
+## 10.组合式API
+### 10.1为什么需要组合式API
 当项目非常复杂时，组件也会越大，逻辑关注点也会分散。
 
 假如一个显示用户的仓库列表的组件，带有搜索功能、筛选功能：
@@ -785,7 +788,7 @@ setup (props) {
 }
 ```
 
-### 创建响应式变量
+### 10.2创建响应式变量
 - **ref( )**
 生成响应式数据，通过其value属性取得值。如果refs数据发生变化，会更新视图。（如果使用单文件组件，应该先引入ref再使用，以下例子均不是单文件组件形式）。
 ```javascript
@@ -858,7 +861,7 @@ mounted(){
   </script>
 ```
 
-### setup参数
+### 10.3setup参数
 - setup接收props和context作为参数，且props是响应式的：
 ```javascript
 export default {
@@ -889,7 +892,7 @@ setup(props,context){
 }
 ```
 
-### watch函数
+### 10.4watch函数
 在组件选项中使用watch选项监测数据变化，在setup函数中，可以导入watch函数来实现同样的功能。
 - 参数
 watch函数接收三个参数：响应式数据或者getter函数、回调函数、配置对象
@@ -1035,7 +1038,7 @@ setup(){
 }
 ```
 
-### watchEffect函数
+### 10.5watchEffect函数
 参考：[Vue3 中 watch 与 watchEffect 有什么区别？](https://www.zhihu.com/question/462378193)
 watchEffect的作用和watch差不多，用于在依赖的数据更新时重新执行操作。
 
@@ -1102,7 +1105,7 @@ num++
 //虽然flag.value为false，num已经没有用了，但是还是会触发watchEffect
 //输出："触发watchEffect"
 ```
-### computed函数
+### 10.6computed函数
 和watch类似，也可导入computed函数来独立使用。
 
 computed接收两个参数：
@@ -1145,7 +1148,7 @@ const double = computed({
 })
 ```
 
-### 组合式函数（函数式组件）
+### 10.7组合式函数（函数式组件）
 将同一逻辑的代码放到setup中可以解决关注点分离的问题，但是当setup函数本身也越来越大时，就失去了意义。
 
 组合式函数即将同一个功能块的代码提取到一个独立的函数中，减轻setup负担且代码能更好复用。一个组合式函数即一个独立的setup函数：
@@ -1181,7 +1184,7 @@ export default {
 Vue2也有函数式组件，但是是无状态的，即没有响应式数据，因此渲染开销比较低，性能得到一定提高。
 然而Vue3的有状态的函数组件性能也提升了，除了特别简单的组件（如创建动态标题的组件），建议使用有状态的组件。
 
-### Provide & Inject
+### 10.8Provide & Inject
 provide和inject用于跨层级组件间的通信，在setup中使用provide和inject时，需要显示导入provide函数、inject函数。
 
 provide函数接受两个参数：
