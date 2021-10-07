@@ -435,9 +435,10 @@ export default defineComponent({
 
 ### 5.6 Teleport
 一些组件，如占满全屏的对话框，如果包裹在其他组件中，就变得容易被干扰，因为样式也将包裹在其它组件中，定位容易变得混乱。
+
 对于这些特殊的组件，既想存在于父组件的逻辑中，又想独立于父组件从而更方便某些操作，就可以使用Teleport瞬移组件：teleport组件允许将组件挂载在任意DOM上。
 
-使用：
+使用：<br>
 假如一个组件，想挂载到id为modal的元素上，则需要被<teleport>包裹，且要用to属性指明挂载点
 ```html
 //modal组件 modal.vue
@@ -561,8 +562,7 @@ vue3删除了这个现象，<transition>期望的是被子元素触发。
 vue3将v-enter、v-leave修改为v-enter-from，v-leave-from
 
 ### 7.3 transition-group
-- vue2:
-
+- vue2:<br>
 在vue2中，transition-group 要求有一个根元素包裹内容，默认为 span ，可通过tag属性更改：
 ```html
 <!--根元素为ul-->
@@ -572,14 +572,13 @@ vue3将v-enter、v-leave修改为v-enter-from，v-leave-from
     </span>
   </transition-group>
 ```
-- vue3:
-
+- vue3:<br>
 在vue3中不再需要根节点，因为vue3支持了片段。如果依旧写上tag，那么会和vue2一样
 
 <span id="8"></span>
 ## 8. 指令
 ### 8.1 v-model在组件上的使用
-- vue2
+- vue2<br>
 vue2中，在子组件上绑定v-model="parentVal"，相当于：
 ```html
 <child v-bind:value="parentVal" v-on:input="parentVal = $event"/>
@@ -603,7 +602,7 @@ export default {
 </script>
 ```
 
-- vue3
+- vue3<br>
 vue3不再用model选项，而且value必须绑定到 "modelValue" 的prop上，通过emits接收update:modelValue事件：
 ```javascript
 <div id="app">
@@ -791,7 +790,7 @@ setup (props) {
 ```
 
 ### 10.2 创建响应式变量
-- **ref( )**
+- **ref( )**<br>
 生成响应式数据，通过其value属性取得值。如果refs数据发生变化，会更新视图。（如果使用单文件组件，应该先引入ref再使用，以下例子均不是单文件组件形式）。
 ```javascript
 <div id="app">
@@ -812,7 +811,7 @@ setup (props) {
   app.mount('#app')
 </script>
 ```
-- **reactive( )**
+- **reactive( )**<br>
 返回对象的响应式副本。如果传入的是refs，会解包所有深层的refs，同时保持它们的响应式。和ref相比，reactive无需使用value访问值
 ```javascript
 setup(){
@@ -833,13 +832,13 @@ mounted(){
 }
 ```
 
-- **ref( )与reactive( )的区别**
+- **ref( )与reactive( )的区别**<br>
   - 参考： [Vue.js 3 中 ref 和 reactive 有何区别？](https://learnku.com/vuejs/t/60866) 
   - ref本质是通过reactive创建的：ref(param)等同于reactive({value: param})。
   - 因此ref也是接收对象的，但是引用类型放reactive可以减少一层转换开销
   - reactive不能接受基本类型数据，会没有响应性
 
-- **toRefs( )**
+- **toRefs( )**<br>
 将响应式对象转换为普通对象，但是普通对象里面的属性依然是响应式的（会在内部指向原对象响应属性的ref）。所以常用于将setup返回的响应式对象进行解构：
 ```html
   <div id="app">
