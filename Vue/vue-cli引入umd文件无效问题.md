@@ -7,7 +7,7 @@
 
 点入报错的文件链接，发现是DOCTYPE标签错误：
 
-![image.png](/img/doctype错误.png)
+![image.png](img/doctype错误.png)
 
 搜索一番后，基本可以确定是引入错误，但是不知道原因。
 
@@ -64,4 +64,5 @@ module.exports = {
 
 ## 参考
 [webpack之Loading chunk x failed](https://www.novenn.com/webpack%E4%B9%8BLoading-chunk-x-failed/) 
+
 [Vue CLI build --target lib 时如何避免打包成多个umd.js文件](http://www.zuo11.com/blog/2020/11/vue_umd_multiple.html)
