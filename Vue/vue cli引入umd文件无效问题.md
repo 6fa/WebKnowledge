@@ -1,3 +1,5 @@
+# 【踩坑记录】vue cli引入umd文件无效问题
+
 ## 问题
 事情起因是我写了一个基于vue的图片上传插件，用vue cli打包为库后，想在本地引入umd包来测试插件能不能用，结果报错，主要是Unexpected token '<' 和 ChunkLoadError：Loading chunk xx failed：
 
