@@ -19,7 +19,7 @@
 
 ## Vue系列
 #### [1. Vue3新特性梳理](Vue/Vue3新特性梳理.md)
-#### [2. 【踩坑记录】vue cli引入umd文件无效问题](Vue/vue cli引入umd文件无效问题.md)
+#### [2. vue-cli引入umd文件无效问题](Vue/vue-cli引入umd文件无效问题.md)
 
 ## CSS基础
 ##### [1. 负margin](css基础/负margin.md)
