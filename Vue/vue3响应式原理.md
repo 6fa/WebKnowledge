@@ -466,6 +466,7 @@ console.log(sum)  //130 可知sum为响应式
 
 
 参考：
+
 [Vue3响应式原理及实现](https://segmentfault.com/a/1190000022871354?utm_source=sf-similar-article)
 
 [Vue3响应式原理+手写reactive](https://segmentfault.com/a/1190000023465134)
