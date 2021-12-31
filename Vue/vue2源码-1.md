@@ -1,6 +1,6 @@
 # Vue2源码解析（1）
 
-参考：
+**参考：**
 
 [Vue技术解密](https://ustbhuangyi.github.io/vue-analysis/v2/prepare/)
 
@@ -10,20 +10,20 @@
 
 [对不同构建版本的解释](https://cn.vuejs.org/v2/guide/installation.html#%E5%AF%B9%E4%B8%8D%E5%90%8C%E6%9E%84%E5%BB%BA%E7%89%88%E6%9C%AC%E7%9A%84%E8%A7%A3%E9%87%8A)
 
-本文目录：
+**本文目录：**
 
-[1.源码核心目录](#1)
+[1. 源码核心目录](#1)
 
-[2.源码构建](#2)
+[2. 源码构建](#2)
 
-[3.Runtime-Only 和 Runtime-Compiler](#3)
+[3. Runtime-Only 和 Runtime-Compiler](#3)
 
-[4.入口（runtime+compiler模式）](#4)
+[4. 入口（runtime+compiler模式）](#4)
   - [4.1 Vue入口](#41)
     - [4.1.1 Vue的定义](#411)
     - [4.1.2 initGlobalAPI](#412)
   - [4.2 挂载](#42)
-  - [4.3 总结）](#43)
+  - [4.3 总结](#43)
 
 
 
@@ -200,6 +200,7 @@ export default Vue
 <span id="41"></span>
 ### 4.1 Vue入口
 上面引入Vue的位置为：src/platforms/web/runtime/index.js
+
 代码重点：
  - 从core/index 引入Vue
  - 对Vue对象进行一些拓展，比如定义了Vue原型上的基础$mount方法
