@@ -24,7 +24,7 @@
 <span id="5"></span>
 ## 5. new Vue()
 
-#### _init
+### _init
 前面一节知道定义vue对象的地方是：src/core/instance/index
 - new Vue时会执行 _init 方法
 - _init方法是由 initMixin方法添加到 Vue的原型上的，init方法位置在：src/core/instance/init.js。主要做的事：
@@ -117,7 +117,7 @@ export function initMixin (Vue: Class<Component>) {
 
 ## 6.Vue实例挂载
 
-#### $mount
+### $mount
 new Vue最后会调用$mount方法挂载，根据平台（浏览器或原生客户端）、模式（runtime only或runtime+compiler）的不同，$mount方法在多个文件中有不同的定义：
 - src/platform/web/entry-runtime-with-compiler.js
 - src/platform/web/runtime/index.js
@@ -192,7 +192,7 @@ Vue.prototype.$mount = function (
 }
 ```
 
-#### mountComponent
+### mountComponent
 mountComponent方法定义在src/core/instance/lifecycle.js：
 - 调用beforeMount钩子函数
 - 定义更新函数updateComponent
@@ -256,9 +256,9 @@ export function mountComponent (
 
 ## 7. 渲染
 
-#### 7.1 创建vnode
+### 7.1 创建vnode
 
-##### 7.1.1 _render
+#### 7.1.1 _render
 vue最后都是通过render函数来生成虚拟DOM，写了template也会被转换成render函数。
 
 vue实例挂载时，mountComponent会调用私有_render方法，而私有_render方法最主要的是调用了render方法。私有_render定义在src/core/instance/render.js，主要做了两件事
@@ -321,7 +321,7 @@ export function renderMixin (Vue: Class<Component>) {
 }
 ```
 
-##### 7.1.2 $createElement
+#### 7.1.2 $createElement
 当Vue初始化时，先执行了各种mixin（作用是在vue原型上拓展各种方法，比如上面的_render），然后调用vm._init，vm._init会从src/core/instance/render.js引入initRender并调用（initRender和上面的renderMixin在同一个文件），initRender里定义了vm.$createElement。
 
 从代码中可以看到：
@@ -444,7 +444,7 @@ export function _createElement (
 }
 ```
 
-##### 7.1.3 new Vnode()
+#### 7.1.3 new Vnode()
 VNode定义于src/core/vdom/vnode.js，new VNode时主要设置vnode对象的标签名、子对象、父节点、文本、对应的真实节点、option选项等属性：
 
 ```javascript
@@ -526,7 +526,7 @@ export default class VNode {
 }
 ```
 
-##### 7.1.4 createComponent
+#### 7.1.4 createComponent
 通过createComponent创建组件类型的VNode，定义于src/core/vdom/create-component.js:
 - 构建子类构造函数
   - 如果组件是对象，则调用Vue.extend()将组件对象转换为继承Vue的构造器Sub（即Vue的子类）
@@ -637,9 +637,9 @@ export function createComponent (
 }
 ```
 
-#### 7.2 将Vnode渲染为真实DOM
+### 7.2 将Vnode渲染为真实DOM
 
-##### 7.2.1 _update
+#### 7.2.1 _update
 调用_update的时机有两个，一是初次渲染，二是数据更新的时候。
 
 前面知道**vm._render创建了vnode，而vm._update将vnode渲染为真实的DOM。**_update方法定义于：src/core/instance/lifecycle.js：
@@ -695,7 +695,7 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
 }
 ```
 
-##### 7.2.2 __patch__
+#### 7.2.2 __patch__
 _update的核心是调用__patch__，而__patch__在不同平台定义是不一样的，web平台的定义在src/platforms/web/runtime/index.js，代码可知其指向patch：
 
 ```javascript
@@ -825,7 +825,7 @@ createPatchFunction位于src/core/vdom/patch.js：
 }
 ```
 
-##### 7.2.3 createElm
+#### 7.2.3 createElm
 createElm方法的作用是创建真实DOM并插入到它的父节点中，主要逻辑：
 - 如果是一个组价，通过 createComponent 创建组件型vnode，最后createComponent会执行挂载( $mount )操作
 - 如果不是，则通过createChildren递归创建子节点，最后添加到页面：
@@ -887,7 +887,7 @@ function createElm (
 }
 ```
 
-##### 7.2.4 patchVnode
+#### 7.2.4 patchVnode
 patchVnode方法的作用是比较并更新元素的差异（注意进入patchVnode部分的vnode均不是真实元素）
 - 如果新vnode是文本节点，则直接更新dom的文本内容
 - 如果新vnode非文本节点，分为几种情况：
@@ -1003,7 +1003,7 @@ function patchVnode (
   }
 ```
 
-##### 7.2.5 updateChildren【diff算法的核心】
+#### 7.2.5 updateChildren【diff算法的核心】
 patchVnode中调用updateChildren来对比更新新旧vnode的子节点，对比的核心算法即diff算法。diff算法整体思路是**从两边到中间开始比较，深度优先、同级比较。**
 
 对比从新旧vnode的头尾开始，核心思路：
@@ -1116,7 +1116,7 @@ function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly
   }
 ```
 
-#### 7.3 总结
+### 7.3 总结
 - 初次渲染会调用更新函数updateComponent来完成视图渲染，数据更新会触发watcher，而watcher也是调用更新函数updateComponent来完成视图更新
 - updateComponent核心是调用_update(），且传入_render()当作参数
 - _render()的作用是生成vnode（虚拟dom）
