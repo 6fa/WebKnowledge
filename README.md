@@ -23,6 +23,7 @@
 #### [3. vue3响应式原理](Vue/vue3响应式原理.md)
 #### [4. vue2源码学习笔记-1](Vue/vue2源码-1.md)
 #### [5. vue2源码学习笔记-2](Vue/vue2源码-2.md)
+#### [6. vue2源码学习笔记-3](Vue/vue2源码-3.md)
 
 ## CSS基础
 ##### [1. 负margin](css基础/负margin.md)
