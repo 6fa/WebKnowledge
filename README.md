@@ -38,5 +38,6 @@
 ##### [6. 身份认证](《图解HTTP》笔记/6-身份认证.md)
 ##### [7. 基于HTTP的功能追加协议](《图解HTTP》笔记/7-基于HTTP的功能追加协议.md)
 
-## TypeScript基础
-#### [TypeScript基础](TypeScript基础/TS基础.md)
+## 其他
+#### [TypeScript基础](其他/TS基础.md)
+#### [Koa2 学习笔记](其他/Koa2.md)
