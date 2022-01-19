@@ -11,13 +11,14 @@
   - [1.1介绍](#11)
   - [1.2context](#12)
   - [1.3应用方法](#13)
+  - [1.4中间件](#14)
 - [2.Koa源码解析](#2)
 
 <span id="1"></span>
 ## Koa的使用
 
-<span id="11"></span>
 ### 1.1介绍
+<span id="11"></span>
 Koa是一个精简的node框架，所有功能都是通过插件的方式实现。主要做的事：
 - 将node的request和response对象封装成 context 对象
 - 基于async/await（generator）的中间件洋葱模型
@@ -105,8 +106,9 @@ node my-koa-app.js
 ```
 
 
-<span id="12"></span>
+
 ### 1.2Context
+<span id="12"></span>
 koa的Context将node的request和response封装在单独的一个对象里。
 Context会在每次request中被创建，被传入中间件（每次请求都会调用注册的async函数）：
 
@@ -268,6 +270,102 @@ app.listen(3000,()=>{
 })
 ```
 
-<span id="13"></span>
-### 1.3Context
 
+### 1.3应用方法
+<span id="13"></span>
+
+#### 1.3.1app.listen( )
+app.listen( )是对http.createServer的封装：
+
+```javascript
+const Koa = require('koa');
+const app = new Koa();
+app.listen(3000);
+
+
+//实际是下面代码的语法糖
+const http = require('http');
+const Koa = require('koa');
+const app = new Koa();
+http.createServer(app.callback()).listen(3000)
+
+```
+
+#### 1.3.2app.callback( )
+app.calbback返回一个适合 http.createServer() 方法的回调函数，用于处理请求。
+
+里面包含了中间件的合并、上下文的处理、对res的处理等。
+
+#### 1.3.3app.use(fn)
+app.use(fn)为应用添加中间件，将中间件放入一个缓存队列中，koa会通过插件（koa-compose）进行递归组合、调用。
+
+
+### 1.4中间件（middleware）
+<span id='14'></span>
+
+#### 1.4.1概念
+中间件是指封装了处理请求操作的方法，所有请求处理都在中间件内部完成。
+
+使用use方法来注册一个中间件，中间件第一个参数是封装了原生req、res的ctx对象，第二个参数是next方法。next方法配合async/await语句，可以很轻松地控制处理流程：
+- 使用await next()等待将控制器交给下一个中间件，等待执行完毕再回到本中间件。这样实现流程的层层展开和层层闭合，所以中间件模型有**洋葱模型**之称。
+
+而原生Node.js中的请求处理完全放在http.createServer的一个回调里，要控制操作流程相对困难。
+
+#### 1.4.2注册中间件
+通过app.use( ) 注册中间件，**每次收到请求都会调用这个中间件**，且会传入ctx和next两个参数。
+- ctx即Context对象
+- next( )的作用是将处理的控制权交给下一个中间件，next( )后面的代码会等下一中间件及后面的中间件执行完才执行
+
+#### 1.4.3执行流程
+```javascript
+const Koa = require('koa')
+const app = new Koa()
+
+
+// 记录执行的时间
+app.use(async (ctx, next) => {
+  let stime = new Date().getTime()
+  await next()
+  let etime = new Date().getTime()
+  ctx.response.type = 'text/html'
+  ctx.response.body = '<h1>Hello World</h1>'
+  console.log(`请求地址: ${ctx.path}，响应时间：${etime - stime}ms`)
+});
+
+app.use(async (ctx, next) => {
+  console.log('中间件1 doSoming')
+  await next();
+  console.log('中间件1 end')
+})
+
+app.use(async (ctx, next) => {
+  console.log('中间件2 doSoming')
+  await next();
+  console.log('中间件2 end')
+})
+
+app.use(async (ctx, next) => {
+  console.log('中间件3 doSoming')
+  // await next();                     //最后一个可以不用调用next
+  console.log('中间件3 end')
+})
+
+app.listen(3000, () => {
+  console.log('server is running at http://localhost:3000')
+})
+```
+
+结果：
+```
+中间件1 doSoming
+中间件2 doSoming
+中间件3 doSoming
+中间件3 end
+中间件2 end
+中间件1 end
+请求地址: /，响应时间：3ms
+```
+
+通过async、await实现流程的**层层展开**和**层层闭合**，所以中间件模型有洋葱模型之称。
+
+需要注意的是，如果没有调用next( )，则它后面的中间件是不会执行的。
