@@ -12,13 +12,15 @@
   - [1.2context](#12)
   - [1.3应用方法](#13)
   - [1.4中间件](#14)
+  - [1.5路由 koa-router ](#15)
+  - [1.6提取中间件&路由](#16)
 - [2.Koa源码解析](#2)
 
 <span id="1"></span>
 ## Koa的使用
 
-### 1.1介绍
 <span id="11"></span>
+### 1.1介绍
 Koa是一个精简的node框架，所有功能都是通过插件的方式实现。主要做的事：
 - 将node的request和response对象封装成 context 对象
 - 基于async/await（generator）的中间件洋葱模型
@@ -107,8 +109,8 @@ node my-koa-app.js
 
 
 
-### 1.2Context
 <span id="12"></span>
+### 1.2Context
 koa的Context将node的request和response封装在单独的一个对象里。
 Context会在每次request中被创建，被传入中间件（每次请求都会调用注册的async函数）：
 
@@ -270,9 +272,9 @@ app.listen(3000,()=>{
 })
 ```
 
-
-### 1.3应用方法
 <span id="13"></span>
+### 1.3应用方法
+
 
 #### 1.3.1app.listen( )
 app.listen( )是对http.createServer的封装：
@@ -299,9 +301,9 @@ app.calbback返回一个适合 http.createServer() 方法的回调函数，用�
 #### 1.3.3app.use(fn)
 app.use(fn)为应用添加中间件，将中间件放入一个缓存队列中，koa会通过插件（koa-compose）进行递归组合、调用。
 
-
-### 1.4中间件（middleware）
 <span id='14'></span>
+### 1.4中间件（middleware）
+
 
 #### 1.4.1概念
 中间件是指封装了处理请求操作的方法，所有请求处理都在中间件内部完成。
@@ -369,3 +371,185 @@ app.listen(3000, () => {
 通过async、await实现流程的**层层展开**和**层层闭合**，所以中间件模型有洋葱模型之称。
 
 需要注意的是，如果没有调用next( )，则它后面的中间件是不会执行的。
+
+<span id='15'></span>
+### 1.5路由（koa-router）
+路由用来描述url与处理函数之间的对应关系。
+
+#### 1.5.1自实现路由
+如果不借助koa-router，自己实现路由的话：
+
+```javascript
+const Koa = require('koa')
+const app = new Koa()
+
+app.use(async(ctx, next)=>{
+  if(ctx.request.path === '/'){
+    ctx.response.body = "<h1>index page</h1>"
+  }else {
+    await next()
+  }
+})
+app.use(async(ctx, next)=>{
+  if(ctx.request.path === '/home'){
+    ctx.response.body = "<h1>home page</h1>"
+  }else {
+    await next()
+  }
+})
+
+app.listen(3000, () => {
+  console.log('server is running at http://localhost:3000')
+})
+```
+
+虽然写法简单，但是处理多个路由将会显得很繁琐。借助koa-router库可以更简单配置路由。
+
+#### 1.5.2用法
+例子：
+
+```javascript
+const Koa = require('koa')
+const Router = require('koa-router')
+const app = new Koa()
+const router = new Router()
+
+//添加路由
+router.get('/', async(ctx,next)=>{
+  ctx.response.body = `<h1>index page</h1>`
+})
+
+router.get('/home', async(ctx,next)=>{
+  ctx.response.body = `<h1>home page</h1>`
+})
+
+//调用路由中间件
+app.use(router.routes())
+	.use(router.allowedMethods())		//根据ctx.status设置response响应头
+
+app.listen(3000, () => {
+  console.log('server is running at http://localhost:3000')
+})
+```
+
+例子中除了调用router.routes外，还调用了router.allowedMethods，它的作用是：
+当所有路由中间件执行完成之后，若ctx.status为空或者404的时候,**用来丰富response对象的header头**。
+
+#### 1.5.3router.use( )
+按定义的顺序调用中间件
+
+```javascript
+
+//添加路由
+router.get('/', async(ctx,next)=>{
+  ctx.response.body = `<h1>index page</h1>`
+  //注意需要调用next方法
+  next()									
+})
+
+//无路由中间件
+router.use(async(ctx,next)=>{
+  //...
+})
+
+//只有路由匹配时才运行中间件
+router.use('/home', async(ctx,next)=>{
+  //...
+})
+//匹配多路由
+router.use(['/home','/cart'], async(ctx,next)=>{
+  //...
+})
+
+
+//调用路由中间件
+app.use(router.routes()).use(router.allowedMethods())
+
+app.listen(3000, () => {
+  console.log('server is running at http://localhost:3000')
+})
+```
+
+#### 1.5.4多中间件
+
+```javascript
+router.get(
+  '/users/:id',
+  function (ctx, next) {
+    return User.findOne(ctx.params.id).then(function(user) {
+      // 首先读取用户的信息，异步操作
+      ctx.user = user;
+      next();
+    });
+  },
+  function (ctx) {
+    console.log(ctx.user);
+    // 在这个中间件中再对用户信息做一些处理
+    // => { id: 17, name: "Alex" }
+  }
+);
+```
+
+#### 1.5.5嵌套路由
+
+用法：fatherRouter.use( path, childRouter.routes(), childRouter.allowedMethods() )
+
+```javascript
+var forums = new Router();
+var posts = new Router();
+
+posts.get('/', function (ctx, next) {...});
+posts.get('/:pid', function (ctx, next) {...});
+forums.use('/forums/:fid/posts', posts.routes(), posts.allowedMethods());
+
+// 可以匹配到的路由为 "/forums/123/posts" 或者 "/forums/123/posts/123"
+app.use(forums.routes());
+```
+
+#### 1.5.6路由前缀
+路由前缀不能是动态的：
+
+```javascript
+var router = new Router({
+  prefix: '/users'
+});
+
+router.get('/', ...); // 匹配路由 "/users" 
+router.get('/:id', ...); // 匹配路由 "/users/:id"
+```
+
+#### 1.5.7URL参数
+koa-router支持将动态路由参数添加到**ctx.params**：
+
+```javascript
+router.get('/:category/:title', function (ctx, next) {
+  console.log(ctx.params);
+  // => { category: 'programming', title: 'how-to-node' } 
+});
+```
+
+#### 1.5.8get请求时的传参
+处理get请求时，传参方式有两种：
+- 使用查询字符串，参数放在url后面：如http://xxx/index?id=123&name=myname
+  - 可以使用**ctx.request.query**或者**ctx.request.queryString**获取
+- 参数放在url中间，即动态路由
+
+```javascript
+// http://xxx/programming/how-to-noode
+
+router.get('/:category/:title', function (ctx, next) {
+  console.log(ctx.params);
+  // => { category: 'programming', title: 'how-to-node' } 
+});
+```
+
+#### 1.5.9处理post请求
+将请求参数放在body中时，需要用到post请求。
+
+post请求通常通过表单、JSON形式发送，但是无论是Node还是koa，都没有提供解析post请求参数的功能。需要通过自己解析上下文 context 中的原生 node.js 请求对象req，将 POST 表单数据解析成 querystring（例如：a=1&b=2&c=3），再将 querystring 解析成 JSON 格式（例如：{"a":"1", "b":"2", "c":"3"}）。
+
+需要额外使用koa-bodyparse、koa-body等插件。
+
+
+<span id='16'></span>
+### 1.6提取中间件 & 路由
