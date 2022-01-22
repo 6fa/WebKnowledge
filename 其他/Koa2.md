@@ -14,6 +14,7 @@
   - [1.4中间件](#14)
   - [1.5路由 koa-router ](#15)
   - [1.6提取中间件&路由](#16)
+  - [1.7项目结构](#17)
 - [2.Koa源码解析](#2)
 
 <span id="1"></span>
@@ -553,3 +554,142 @@ post请求通常通过表单、JSON形式发送，但是无论是Node还是koa�
 
 <span id='16'></span>
 ### 1.6提取中间件 & 路由
+
+把中间件、路由提取到另外的文件，可以更方便管理和维护。
+
+#### 1.6.1中间件的分离
+
+```javascript
+//新建middleware文件夹存放中间件
+// 新建midlleware/index.js，用于集中管理中间件
+
+const mw1 = require('./mw1') //引入所有中间件
+const mw2 = require('./mw2')
+const mw3 = require('./mw3')
+
+module.exports = (app)=> { //传入app
+  app.use(mw1())
+  app.use(mw2())
+  app.use(mw3())
+}
+```
+```javascript
+// middleware/mw1.js
+module.exports = ()=>{
+  return async(ctx,next)=>{
+    //...
+  }
+}
+```
+
+#### 1.6.2路由的分离
+
+```javascript
+//新建router.js集中管理路由
+const Router = require('koa-router')
+const router = new Router()
+
+//controller文件夹存放路由的回调
+const HomeController = require('./controller/home')
+
+module.exports = (app)=>{
+  router.get('/', HomeController.index)
+  router.get('/home', HomeController.home)
+  
+  app.use(router.routes()).use(router.allowedMethods())
+}
+```
+
+controller存放路由回调：
+
+```javascript
+// controller/home.js
+module.exports = {
+  index: async(ctx, next) => {
+    ctx.response.body = `<h1>index page</h1>`
+  },
+  home: async(ctx, next) => {
+    ctx.response.body = '<h1>HOME page</h1>'
+  }
+}
+```
+
+#### 1.6.3修改app.js
+
+```javascript
+//app.js
+const Koa = require('koa')
+const app = new Koa()
+const bodyparser = require('koa-parser')
+
+const router = require('./router')  //引入路由文件
+const middleware = require('./middleware') //引入中间件文件
+
+app.use(bodyparser)
+
+
+middleware(app)
+router(app)
+
+app.listen(3000, () => {
+  console.log('server is running at http://localhost:3000')
+})
+```
+
+<span id='11'></span>
+### 1.7项目结构
+
+推荐项目结构：
+
+```javascript
+├─ controller/          // 用于解析用户的输入，处理后返回相应的结果
+├─ service/             // 用于编写业务逻辑层，比如连接数据库，调用第三方接口等
+├─ errorPage/           // http 请求错误时候，对应的错误响应页面
+├─ logs/                // 项目运用中产生的日志数据
+├─ middleware/          // 中间件集中地，用于编写中间件，并集中调用
+│  ├─ mi-http-error/
+│  ├─ mi-log/
+│  ├─ mi-send/
+│  └── index.js
+├─ public/              // 用于放置静态资源
+├─ views/               // 用于放置模板文件，返回客户端的视图层
+├─ router.js            // 配置 URL 路由规则
+└─ app.js               // 用于自定义启动时的初始化工作，比如启动 https，调用中间件，启动路由等
+
+```
+
+service用于放置业务逻辑，比如注册：
+
+```javascript
+// service/home.js
+module.exports = {
+    register: async(name, pwd) => {
+      let data 
+      if (name == 'ikcamp' && pwd == '123456') {
+        data = `Hello， ${name}！`
+      } else {
+        data = '账号信息错误'
+      }
+      return data
+    }
+  }
+```
+
+```javascript
+//controller/home.js
+
+// 引入 service 文件
+const HomeService = require('../service/home')
+module.exports = {
+  // ……
+  //register 方法 
+  register: async(ctx, next) => {
+    let {
+      name,
+      password
+    } = ctx.request.body
+    let data = await HomeService.register(name, password)  //注意这里
+    ctx.response.body = data
+  }
+}
+```
