@@ -8,14 +8,19 @@
 
 本文目录：
 - [1.Koa的使用](#1)
-  - [1.1介绍](#11)
-  - [1.2context](#12)
-  - [1.3应用方法](#13)
-  - [1.4中间件](#14)
-  - [1.5路由 koa-router ](#15)
-  - [1.6提取中间件&路由](#16)
-  - [1.7项目结构](#17)
+  - [1.1 介绍](#11)
+  - [1.2 context](#12)
+  - [1.3 应用方法](#13)
+  - [1.4 中间件](#14)
+  - [1.5 路由 koa-router ](#15)
+  - [1.6 提取中间件&路由](#16)
+  - [1.7 项目结构](#17)
 - [2.Koa源码解析](#2)
+  - [2.1 application.js](#21)
+  - [2.2 context.js](#22)
+  - [2.3 request.js](#23)
+  - [2.4 response.js](#24)
+  - [2.5 洋葱模型的实现.js](#25)
 
 <span id="1"></span>
 ## Koa的使用
@@ -691,5 +696,353 @@ module.exports = {
     let data = await HomeService.register(name, password)  //注意这里
     ctx.response.body = data
   }
+}
+```
+
+<span id='2'></span>
+## 2.Koa源码解析
+koa源码供共4个文件：
+
+```
+── lib
+   ├── application.js
+   ├── context.js
+   ├── request.js
+   └── response.js
+```
+
+<span id="21"></span>
+### 2.1 application.js
+application.js是koa的入口文件，暴露出应用的类：
+
+```javascript
+//依赖模块，下面只列出核心需要关注的内容
+const compose = require('koa-compose');
+const context = require('./context');
+const request = require('./request');
+const response = require('./response');
+const Emitter = require('events');
+const convert = require('koa-convert');
+
+// koa应用继承了node的events模块，
+module.exports = class Application extends Emitter {
+  //--------------------------------1
+  constructor(options) {
+    super();
+    options = options || {};
+    //...
+    this.env = options.env || process.env.NODE_ENV || 'development';
+		//...
+    //middleware数组：存放所有通过use函数引入的中间件
+    this.middleware = [];
+    
+    //通过Object.create创建的context、request、response对象
+    this.context = Object.create(context);
+    this.request = Object.create(request);
+    this.response = Object.create(response);
+    //...
+  }
+  
+  //--------------------------------2
+  //调用listen方法时，通过http.createServer创建服务器
+  listen(...args) {
+    debug('listen');
+    // this.callback()是重点，返回的是对应http.createServer的参数函数
+    const server = http.createServer(this.callback());
+    return server.listen(...args);
+  }
+  
+  //--------------------------------3
+  //返回一个类似(req, res) => {}的函数
+  callback() {
+    //compose即koa-compose插件，它的作用是重新组合中间件
+    const fn = compose(this.middleware);
+
+  	//...
+
+    const handleRequest = (req, res) => {
+      //调用createContext函数，传入node的req、res，生成ctx对象
+      const ctx = this.createContext(req, res);
+      //调用handleRequest函数（app实例上的，注意区分本函数handleRequest）
+      //传入组合过的 中间件数组 处理请求
+      return this.handleRequest(ctx, fn);
+    };
+
+    return handleRequest;
+  }
+  
+  //--------------------------------4
+  // createContext函数：生成ctx对象的函数
+  createContext(req, res) {
+    const context = Object.create(this.context);
+    const request = context.request = Object.create(this.request);
+    const response = context.response = Object.create(this.response);
+    context.app = request.app = response.app = this;
+    context.req = request.req = response.req = req;
+    context.res = request.res = response.res = res;
+    request.ctx = response.ctx = context;
+    request.response = response;
+    response.request = request;
+    context.originalUrl = request.originalUrl = req.url;
+    context.state = {};
+    return context;
+  }
+  //--------------------------------5
+  //handlerRequest函数：处理请求。fnMiddleware是compose过的中间件数组
+  handleRequest(ctx, fnMiddleware) {
+    const res = ctx.res;
+    res.statusCode = 404;
+    const onerror = err => ctx.onerror(err);
+    
+    //respond()不是实例方法
+    //它的作用是根据body类型做一些处理，最后才res.end(body)
+    const handleResponse = () => respond(ctx);
+    onFinished(res, onerror);
+    return fnMiddleware(ctx).then(handleResponse).catch(onerror);
+  }
+	//--------------------------------6
+  //use函数
+  use(fn) {
+    if (typeof fn !== 'function') throw new TypeError('middleware must be a function!');
+    if (isGeneratorFunction(fn)) {
+      //兼容koa1的generator写法，使用convert来转换
+      fn = convert(fn);
+    }
+    debug('use %s', fn._name || fn.name || '-');
+    //向middleware中添加中间件
+    this.middleware.push(fn);
+    return this;
+  }
+  
+  //......
+}
+
+//--------------------------------7
+//主要是判断你之前中间件写的 body 的类型，做一些处理，然后才使用res.end(body)
+function respond(ctx) {
+  // allow bypassing koa
+  if (false === ctx.respond) return;
+
+  if (!ctx.writable) return;
+
+  const res = ctx.res;
+  let body = ctx.body;
+  const code = ctx.status;
+
+  // ignore body
+  if (statuses.empty[code]) {
+    // strip headers
+    ctx.body = null;
+    return res.end();
+  }
+
+  if ('HEAD' === ctx.method) {
+    //...
+    return res.end();
+  }
+
+  // status body
+  if (null == body) {
+    //...
+    return res.end(body);
+  }
+
+  // responses
+  if (Buffer.isBuffer(body)) return res.end(body);
+  if ('string' === typeof body) return res.end(body);
+  if (body instanceof Stream) return body.pipe(res);
+
+  // body: json
+  body = JSON.stringify(body);
+  if (!res.headersSent) {
+    ctx.length = Buffer.byteLength(body);
+  }
+  res.end(body);
+}
+```
+
+application.js主要处理了以下事情：
+
+- 初始化中间件middleware数组
+- 引入了context.js、request.js、response.js，初始化context、request、response对象
+- 暴露了一些公共API，如listen、use方法
+  - use方法会将中间件函数收集到middleware数组中
+  - listen方法会通过http.createServer创建服务器，并且传入参数函数callback()
+  - callback会进行中间件的组合合并（通过koa-compose）、生成中间件函数的ctx对象、处理请求，最后返回的是符合http.createServer参数的函数
+
+```javascript
+//koa的listen方法是对http.createServer的封装
+//约等于:
+http.createServer(app.callback()).listen(...)
+```
+
+<span id="22"></span>
+### 2.2 context.js
+context.js的主要功能：
+- 错误事件处理
+- 代理response、request对象的一些属性和方法
+
+```javascript
+const util = require('util');
+const createError = require('http-errors');
+const delegate = require('delegates');
+const Cookies = require('cookies');
+//...
+
+
+const proto = module.exports = {
+  //...
+  onerror(err) {
+    if (null == err) return;
+		//...
+    // app触发error事件
+    this.app.emit('error', err, this);
+  }
+  
+  get cookies() {
+    //...
+  },
+  set cookies(_cookies) {
+    //...
+  }
+}
+
+//context对象代理response的一些方法、属性
+delegate(proto, 'response')
+  .method('attachment')
+  .method('redirect')
+  //...
+
+//context对象代理request的一些方法、属性
+delegate(proto, 'request')
+  .method('acceptsLanguages')
+  .method('acceptsEncodings')
+	//...
+```
+
+<span id='23'></span>
+### 2.3 request.js
+基于node原生req对象，以getter、setter形式封装了一些属性和方法:
+
+```javascript
+module.exports = {
+  
+  // 在application.js的createContext函数中，
+  //会把node原生的req作为request对象(即request.js封装的对象)的属性
+  // request对象会基于req封装很多便利的属性和方法
+  get header() {
+    return this.req.headers;
+  },
+
+  set header(val) {
+    this.req.headers = val;
+  },
+
+  // 省略了大量类似的工具属性和方法
+};
+```
+
+<span id='24'></span>
+### 2.4 response.js
+和request.js差不多, 且返回的body支持多种格式：
+
+```javascript
+module.exports = {
+  // 在application.js的createContext函数中，
+  //会把node原生的res作为response对象（即response.js封装的对象）的属性
+  // response对象与request对象类似，基于res封装了一系列便利的属性和方法
+  get body() {
+    return this._body;
+  },
+
+  set body(val) {
+    // 支持string
+    if ('string' == typeof val) {
+    }
+
+    // 支持buffer
+    if (Buffer.isBuffer(val)) {
+    }
+
+    // 支持stream
+    if ('function' == typeof val.pipe) {
+    }
+
+    // 支持json
+    this.remove('Content-Length');
+    this.type = 'json';
+  },
+ }
+```
+
+<span id='25'></span>
+### 2.5洋葱模型的实现
+调用app.listen()时，会在内部调用http.createServer()，并把this.callback()作为参数传进去。
+callback的作用：
+- 使用koa-compose处理所有中间件，它是实现洋葱模型的核心
+- 基于node的req、res封装成ctx对象
+- 处理响应内容
+
+```javascript
+callback() {
+    // compose处理所有中间件函数。洋葱模型实现核心
+    const fn = compose(this.middleware);
+
+    // 每次请求执行函数(req, res) => {}
+    const handleRequest = (req, res) => {
+      // 基于req和res封装ctx
+      const ctx = this.createContext(req, res);
+      // 调用handleRequest处理请求
+      return this.handleRequest(ctx, fn);
+    };
+
+    return handleRequest;
+  }
+
+//handleRequest接受ctx和compose后的fn
+ handleRequest(ctx, fnMiddleware) {
+    const res = ctx.res;
+    res.statusCode = 404;
+
+    // 调用context.js的onerror函数
+    const onerror = err => ctx.onerror(err);
+
+    // 处理响应内容
+    const handleResponse = () => respond(ctx);
+
+    // 确保一个流在关闭、完成和报错时都会执行响应的回调函数
+    onFinished(res, onerror);
+
+    // 中间件执行、统一错误处理机制的关键
+    return fnMiddleware(ctx).then(handleResponse).catch(onerror);
+  }
+```
+
+koa-compose的精简代码：
+
+```javascript
+module.exports = compose
+
+function compose(middleware) {  //middleware是中间件数组
+    return function (context, next) {  //返回的这个函数会在每次请求时都调用
+      																	//因为每次请求会调用callback
+       																	//其实就是将所有中间间组合成一个函数
+      
+      let index = -1
+      return dispatch(0)
+      function dispatch (i) {
+        if (i <= index) return Promise.reject(new Error('next() called multiple times'))
+        index = i
+        let fn = middleware[i]
+        if (i === middleware.length) fn = next
+        if (!fn) return Promise.resolve()
+        try {
+          //中间件调用next时，会执行dispatch.bind(null, i + 1)
+          return Promise.resolve(fn(context, dispatch.bind(null, i + 1)));
+        } catch (err) {
+          return Promise.reject(err)
+        }
+      }
+    }
 }
 ```
