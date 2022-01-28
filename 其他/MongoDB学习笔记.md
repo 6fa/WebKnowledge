@@ -347,3 +347,276 @@ db.person.find( {name: "jack"} )
 #### 2.6.4 删除索引
 - 删除所有索引：db.集合名.dropIndexes()
 - 删除指定索引：db.集合名.dropIndex( 索引名称 )
+
+### 2.7 聚合
+聚合 aggregate( ) 通过**管道**处理数据(诸如统计平均值，求和等)，并返回计算后的数据结果。
+
+```javascript
+//基本语法
+db.col.aggregate(
+  [
+    <stage1>, // 管道1
+    <stage2>
+  ]
+)
+
+
+//比如
+db.col.aggregate(
+  [
+    //$match用于获取分数大于70小于或等于90记录
+    { $match : { score : { $gt : 70, $lte : 90 } } },
+    //将符合条件的记录送到下一阶段$group管道操作符进行处理
+    { $group: { _id: null, count: { $sum: 1 } } }
+  ]
+)
+//如果是单个管道操作，可以不用使用数组包裹
+```
+
+##### 管道
+管道用于将当前命令的输出结果传递给下个命令：当前管道处理完毕后将结果传递下个管道处理。
+
+聚合操作中的常用操作：
+- $project：按照自定义的结构显示文档
+
+```javascript
+//结果中就只还有_id,tilte和author三个字段
+db.article.aggregate(
+    { $project : {
+        title : 1 , //1或者true表示显示
+        author : 1 ,
+    }}
+ );
+
+//_id为默认显示的，如果不想显示_id，则设为0或false
+db.article.aggregate(
+  { $project : {
+      _id : 0 ,
+      title : 1 ,
+      author : 1
+ }});
+```
+
+- $group：将集合中的文档分组，可用于统计结果
+- $match：用于过滤数据，只输出符合条件的文档
+- $sort：排序
+- $limit：限制聚合管道返回的文档数
+- $skip：在聚合管道中跳过指定数量的文档，并返回余下的文档
+
+##### 表达式操作符
+- $sum：计算总和，$sum: 1表示每条记录累积加1，$sum: "$score"表示score字段的总和
+- $avg：计算平均值，$avg: '$count' 计算count字段的平均值【注意这里count为字段的键名，所以要加上$引用】
+- $min
+- $max
+- $push：将值加入一个数组中，不会判断是否有重复的值。scores: {$push: "$score"} 将每条记录的score字段值添加到scores数组
+- $addToSet：将值加入一个数组中，会判断重复值，已存在则不添加
+- $first：根据资源文档的排序获取第一个文档数据
+- $last：根据资源文档的排序获取最后一个文档数据
+
+##### 例子
+```javascript
+//根据name分组，将age添加到数组
+> db.user.aggregate({$group:{_id:"$name",totalage:{$push:"$age"}}})
+{ "_id" : "jack", "totalage" : [ 19 ] }
+{ "_id" : "bobby", "totalage" : [ ] }
+{ "_id" : "Rose", "totalage" : [ 51 ] }
+
+//全部统计
+> db.user.aggregate({$group:{_id:null,totalAge:{$push:"$age"}}})
+{ "_id" : null, "totalAge" : [ 19, 51 ] }
+
+
+// skip实例
+db.article.aggregate(
+    { $skip : 5 });
+
+//
+db.col.aggregate(
+  [
+    //$match用于获取分数大于70小于或等于90记录
+    { $match : { score : { $gt : 70, $lte : 90 } } },
+    //将符合条件的记录送到下一阶段$group管道操作符进行处理
+    //这里表示共有几条传过来的文档
+    { $group: { _id: null, count: { $sum: 1 } } }  //注意此处id为null
+  ]
+)
+```
+
+### 2.8 ObjectId
+文档的默认索引_id值是ObjectId。
+
+ObjectId 是一个12字节 BSON 类型数据，有以下格式：
+- 前4个字节表示时间戳
+- 接下来的3个字节是机器标识码
+- 紧接的两个字节由进程id组成（PID）
+- 最后三个字节是随机数。
+
+创建新ObjectId：
+
+```javascript
+>newObjectId = ObjectId()
+
+//返回唯一生成的id
+>myObjectId = ObjectId("5349b4ddd2781d08c09890f4")
+```
+
+创建文档时间戳：
+
+```javascript
+//getTimestamp 函数来获取文档的创建时间
+>ObjectId("5349b4ddd2781d08c09890f4").getTimestamp()
+//返回 ISO 格式的文档创建时间
+ISODate("2014-04-12T21:49:17Z")
+```
+
+转换为字符串：
+
+```javascript
+>new ObjectId().str
+//返回Guid格式的字符串：
+5349b4ddd2781d08c09890f3
+```
+
+### 2.9 引用
+- 嵌入关系
+可以在文档里可以包括其他文档，称为嵌入式关系，比如：
+
+```javascript
+{
+   "_id":ObjectId("52ffc33cd85242f436000001"),
+   "contact": "987654321",
+   "dob": "01-01-1991",
+   "name": "Tom Benzamin",
+   "address": [
+      {
+         "building": "22 A, Indiana Apt",
+         "pincode": 123456,
+         "city": "Los Angeles",
+         "state": "California"
+      },
+      {
+         "building": "170 A, Acropolis Apt",
+         "pincode": 456789,
+         "city": "Chicago",
+         "state": "Illinois"
+      }]
+} 
+
+//可以这样查询用户地址
+>db.users.findOne({"name":"Tom Benzamin"},{"address":1})
+```
+这样的缺陷是随着用户和地址不断增加，数据量变大影响读写性能。
+
+- 引用关系
+可以将用户文档和地址文档分开，用户文档通过引用地址文档的_id来建立联系：
+
+```javascript
+{
+   "_id":ObjectId("52ffc33cd85242f436000001"),
+   "contact": "987654321",
+   "dob": "01-01-1991",
+   "name": "Tom Benzamin",
+   "address_ids": [
+      ObjectId("52ffc4a5d85242602e000000"),
+      ObjectId("52ffc4a5d85242602e000001")
+   ]
+}
+
+//要读取到地址就需要两次查询
+>var result = db.users.findOne({"name":"Tom Benzamin"},{"address_ids":1})
+>var addresses = db.address.find({"_id":{"$in":result["address_ids"]}})
+```
+- DBRefs
+假如地址文档不是在同一个集合，想要引用其他集合的文档，可使用DBRefs：
+
+```javascript
+//形式
+{ $ref: 集合名称, $id: 引用的id, $db:数据库名称，可选参数}
+
+//例子
+	{
+     "_id":ObjectId("53402597d852426020000002"),
+     "address": {
+     "$ref": "address_home",
+     "$id": ObjectId("534009e4d852427820000002"),
+     "$db": "runoob"
+     },
+     "contact": "987654321",
+     "dob": "01-01-1991",
+     "name": "Tom Benzamin"
+  }
+
+
+//查找
+>var user = db.users.findOne({"name":"Tom Benzamin"})
+>var dbRef = user.address
+//切换到runoob库
+>db[dbRef.$ref].findOne({"_id":(dbRef.$id)})
+```
+
+## 3.在NodeJs中使用MongoDB
+### 安装驱动
+需要使用MongoDB官方提供的node mongodb driver包，安装：
+```
+npm install mongodb
+
+//如果使用ts，还需要Node.js类型定义来使用
+npm install -D @types/node
+```
+安装完成后需要打开mongodb（在终端输入mongod），才能继续下面的连接
+
+### 连接数据库
+
+```javascript
+const { MongoClient } = require('mongodb');
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+
+const dbName = 'mydb';
+
+async function main() {
+  //使用connect()方法连接
+  await client.connect();
+  console.log('Connected successfully to server');
+  const mydb = client.db(dbName);
+  const collection = mydb.collection('colName'); //传入集合名称
+
+  // 一些操作
+
+  return 'done.';
+}
+
+main()
+  .then(console.log)
+  .catch(console.error)
+	.finally(()=>{ client.close() })
+```
+
+### 操作例子
+
+```javascript
+const { MongoClient } = require('mongodb');
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+
+
+async function main(){
+	await client.connect()
+	const collection = client.db('mydb').collection('colName');
+	
+  //插入文档
+  const insertResult = await collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }]);
+	console.log('Inserted documents =>', insertResult);
+  
+  //更新文档
+  const updateResult = await collection.updateOne({ a: 3 }, { $set: { b: 1 } });
+	console.log('Updated documents =>', updateResult);
+  
+  //...
+}
+
+main()
+  .then(console.log)
+  .catch(console.error)
+	.finally(()=>{ client.close() })
+```
