@@ -1,5 +1,14 @@
 # MongoDB学习笔记
 
+参考：
+- [mongodb中文手册](https://mongodb.net.cn/manual/introduction/)
+- [菜鸟mongodb教程](https://www.runoob.com/mongodb/mongodb-tutorial.html)
+- [因为 MongoDB 没入门，我丢了一份实习工作](https://juejin.cn/post/6844904182428729351)
+- [mongoDB看这篇就够了](https://juejin.cn/post/6844903857315643406#heading-0)
+- [关系型数据库 VS 非关系型数据库](https://zhuanlan.zhihu.com/p/78619241)
+- [关系型与非关系型数据库的优缺点](https://blog.csdn.net/G_Q_L/article/details/77946483)
+- [MongoDB索引原理](https://mongoing.com/archives/2797)
+
 ## 1.非关系型数据库
 MongoDB是非关系型数据库。
 
@@ -231,3 +240,110 @@ db.col.find(
 
 - db.集合名.find( ).pretty()：以格式化的方式来显示所有文档
 - db.集合名.findOne( )：只返回符合查询条件的一个文档。find()返回的是数组，而findOne返回的是一个对象
+
+### 2.4 limit( ) 与 skip( )
+- limit( )接受一个数字参数，限制读取的文档条数
+
+```javascript
+db.COLLECTION_NAME.find().limit(NUMBER)
+```
+
+- skip( )接受一个数字参数，表示跳过指定数量的文档
+
+```javascript
+//下面例子中，limit和skip结合使用
+//只返回符合条件的文档中第二条（limit限制为1，且skip了第一条）
+db.col.find({},{"title":1,_id:0}).limit(1).skip(1)
+```
+
+### 2.5 排序
+sort( )方法用于对数据进行排序：
+```javascript
+db.col.find().sort({"key":1})
+// 按照键名为key的字段对数据进行排序
+// 1为升序
+// -1为降序
+```
+
+### 2.6 索引
+索引使得mongodb可以快速地查询，如果没有索引，就要扫描集合中的每个文档。
+- 插入文档后，会被存储引擎持久化存储，生成位置信息，可以通过位置信息，从存储引擎中读取文档。
+
+| 位置信息 | 文档 |
+| ---- | ---- |
+| pos1 |	{“name” : “jack”, “age” : 19 } |
+| pos2 |	{“name” : “rose”, “age” : 20 } |
+| pos3 |	{“name” : “jack”, “age” : 18 } |
+| pos4 |	{“name” : “tony”, “age” : 21} |
+| pos5 |	{“name” : “adam”, “age” : 18} |
+
+- 假如要查询年龄为50的用户：db.col.find({age: 50})，就要扫描所有文档对比age是否为50
+- 当集合文档数量庞大时，对集合全面扫描开销会很大
+- 可以给age字段建立一个索引：
+```javascript
+//给age建立升序索引
+db.user.createIndex({age: 1})
+```
+
+- 建立索引后，会额外储存一份按照age升序排序的索引数据。索引通常采用类似btree的结构持久化存储，以保证从索引里快速（O(logN)的时间复杂度）找出某个age值对应的位置信息，然后根据位置信息就能读取出对应的文档
+
+| age |	位置信息 |
+| ---- | ---- |
+| 18 |	pos3 |
+| 18 |	pos5 |
+| 19 |	pos1 |
+| 20 |	pos2 |
+| 21 |	pos4 |
+
+#### 2.6.1 创建索引
+默认索引是_id，且不可删除。
+
+通过db.集合名.createIndex( )创建索引：
+
+```javascript
+db.collection.createIndex(keys, options)
+
+keys：要创建索引的字段，如{age: 1}，1为升序，-1为降序
+
+options:{
+	background: 建索引过程会阻塞其它数据库操作，将它设置为true可以以后台方式创建索引,
+  unique: 是否唯一，
+  name: 索引名称，如果未指定，则以创建索引的字段+排序顺序为名称，如age_1,
+  v: 索引版本号，默认的索引版本取决于mongod创建索引时运行的版本，
+  
+  //...省略其他
+}
+```
+
+#### 2.6.2 查看索引
+使用db.集合.getIndexes( ):
+
+```javascript
+[
+  {
+    "v" : 2,
+    "key" : {
+            "_id" : 1
+    },
+    "name" : "_id_"
+  }
+]
+```
+
+#### 2.6.3 复合索引
+复合索引指使用多个字段联合创建索引，会先按第一个字段排序，在已经排序的基础上再按第二个字段排序，以此类推：
+
+```javascript
+db.col.createIndex({age:1,name:1})
+
+//可以通过该索引加速查找的情况：
+db.col.find( {age： 18， name: "jack"} )
+db.person.find( {age： 18} )
+
+//不可以通过该复合索引加速查找的情况：
+db.person.find( {name: "jack"} )
+```
+
+#### 2.6.4 删除索引
+- 删除所有索引：db.集合名.dropIndexes()
+- 删除指定索引：db.集合名.dropIndex( 索引名称 )
