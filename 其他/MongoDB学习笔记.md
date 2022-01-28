@@ -1,0 +1,233 @@
+# MongoDB学习笔记
+
+## 1.非关系型数据库
+MongoDB是非关系型数据库。
+
+关系型数据库与非关系型数据库概念：
+  - 关系型数据库采用**关系模型**来组织数据库，通常是二维表格，每列表示特定类型的数据（比如身高、年龄等），每行表示一个对象或实体的相关值集合（如张三的身高、年龄等）
+  - 非关系型数据库，通常以**键值对**的形式储存数据，每一个元组都可以有不一样的字段，不会局限于固定的结构，可以减少一些时间和空间的开销。使用这种方式，为了获取用户的不同信息，不需要像关系型数据库中，需要进行多表查询，仅仅需要根据key来取出对应的value值即可。
+
+关系型数据库的优缺点、适用场景：
+  - 优点：二维表格形式容易理解；保存的数据必须标准化，减少数据冗余提高可靠性
+  - 缺点：
+    - 数据读写必须经过sql解析，大量数据、高并发下读写性能不足
+    - 扩展困难
+  - 适用场景
+    - 适合储存结构化、复杂的数据，比如用户的账号、地址
+    - 这些数据的规模、增长的速度通常是可以预期的
+
+非关系型数据库的优缺点、适用场景：
+  - 优点：
+    - 存储格式多，支持key-value形式、文档形式、图片形式
+    - 处理高并发、大批量数据的能力强
+    - 扩展性高
+  - 缺点：只能储存简单的数据
+  - 适用场景：
+    - 储存非结构化数据，比如文章、评论
+    - 这些数据是海量的，并且增长的速度是难以预期的
+    - 按照key获取数据效率很高，但是对于join或其他结构化查询的支持就比较差
+
+## 2.MongoDB核心
+
+### 2.1 database
+MongoDB的单个实例可以有多个独立的数据库，每一个都有自己的集合和权限，不同的数据库也放置在不同的文件中。
+
+**a.查看数据库：show dbs**
+
+在启动数据库和连接数据库后，终端输入 show dbs 可以查看当下的数据库，一般有以下几个：
+- admin：权限数据库，储存mongodb的用户信息，admin库里的用户自动继承所有数据库的权限
+- config：分片时（储存海量数据时，多台机器分割数据），用于保存分片的相关信息
+- local：这个数据永远不会被复制，可以用来存储限于本地单台服务器的任意集合
+
+**b.显示当前数据库：db**
+
+会有一个默认的test数据库，如果没有创建新的数据库，则集合将被放在test数据库中
+
+**c.创建/切换数据库：use 数据库名称**
+
+如果数据库不存在，则创建；如果数据库为已经存在的，则是切换到该数据库
+
+**d.删除数据库：db.dropDatebase()**
+
+删除的是当前数据库，所以要切换到想要删除的库再执行命令
+
+### 2.2 collection
+集合即一组文档的组合
+- 创建集合：db.createCollection( 集合名称 )
+- 查看已有集合：show collections
+- 删除集合：db.集合名称.drop()。删除成功则返回true
+
+### 2.3 document
+文档是指类似JSON对象的数据结构（BSON，JSON的超集），即一组键值对。
+
+#### 2.3.1 插入文档
+- db.集合名.insert( document )
+  - 新建的数据会自动生成主键_id
+  - 如果插入的document的主键已经存在，则会报错
+  - 如果是多条数据，可以是传入文档数组
+- db.集合名.insertOne()
+- db.集合名.insertMany(arr)
+
+#### 2.3.2 更新文档
+可以使用 db.集合名.update( )
+```javascript
+   db.col.update(
+     <query>,  //查询条件
+     <update>, //update的对象和一些更新的操作符（如$,$inc...）等
+     {
+       upsert: <boolean>,//可选,如果不存在update的记录，是否插入objNew,true为插入，默认是false
+     
+       multi: <boolean>,//可选，mongodb 默认是false,只更新找到的第一条记录
+     		//如果这个参数为true,就把按条件查出来多条记录全部更新
+     
+       writeConcern: <document>//可选，抛出异常的级别
+     }
+   )
+
+```
+
+例子：
+```javascript
+//假如user集合中有两条条数据：
+{_id:...,name:"Jack", age:20}
+{_id:...,name:"Rose", age:51}
+
+//更新数据
+db.user.update({age:{$gt: 50}},{$set:{role: "elderly"}}, true, true)
+//WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+//更新后
+{_id:...,name:"Jack", age:20}
+{_id:...,name:"Rose", age:51,role:"elderly"}
+```
+
+#### 2.3.3 常用的原子操作命令
+比如文档的保存，修改，删除等，都是原子操作；所谓原子操作就是要么这个文档保存到Mongodb，要么没有保存到Mongodb，不会出现查询到的文档没有保存完整的情况。
+常用操作：
+- $set
+- $unset
+- $inc
+- $push
+- $pushAll
+- $pull
+- $addToSet
+- $pop
+- $rename
+
+```javascript
+// $set:
+//指定一个键并更新键，如不存在则创建
+{ $set : { field : value } }
+
+// $unset: 
+//删除指定键
+{ $inc : { field : value } }
+
+// $inc: 
+//对文档的某个值为数字型（只能为满足要求的数字）的键进行增减的操作
+{ $inc : { field : value } } //value为增加值，负数为减少
+
+// $push: 
+//把value追加到field里面去，field一定要是数组类型才行
+// 如果field不存在，会新增一个数组类型加进去
+{ $push : { field : value } }
+
+// $pushAll
+//同push，只是一次追加多个数组字段
+{ $pushAll : { field : value_array } }
+
+// $pull
+// 从数组filed内删除一个等于value值
+{ $pull : { field : _value } }
+
+// $addToSet
+// 增加一个值到数组内，而且只有当这个值不在数组内才增加
+
+// $pop
+// 删除数组的第一个或最后一个元素
+{ $pop : { field : 1 } }
+
+// $rename
+// 修改field字段名称
+{ $rename : { old_field_name : new_field_name } }
+```
+
+#### 2.3.4 常用的条件操作符
+用于查询条件中
+- $gt：大于
+- $lt：小于
+- $gte：大于等于
+- $lte：小于等于
+- $ne：不等于
+
+```javascript
+//等于
+db.col.find({"key":"value"})
+
+//大于
+db.col.find({"key":{$gt:50}})
+```
+
+- $or
+
+```javascript
+//多个查询条件，类似于and
+db.col.find({"key1":"value1","key2":"value2"})
+
+// or条件,只需满足
+db.col.find(
+  {
+    $or: [
+      {"key1":"value1"}, {"key2":"value2"}
+    ]
+  }
+)
+
+//and or一起使用
+//满足likes>50,且满足by或title其中一个
+db.col.find({"likes": {$gt:50}, $or: [{"by": "菜鸟教程"},{"title": "MongoDB 教程"}]})
+```
+
+- $in：包含；$nin：不包含
+
+```javascript
+db.col.find({"age":{$in: [10,11]}})  //查找age等于10或11的数据
+```
+
+- $all：同时匹配所有
+
+```javascript
+db.col.find({"coures":{$all: ["js","mongodb"]}}) //course要同时包含js和mongodb
+
+//如
+{"name":"David",age:26,course:["js","Node","Mongodb"]},
+{"name":"Tom",age:26,course:["js","Node","Mongoose"]})
+```
+
+- $size：数组元素个数
+- $regex：正则表达式匹配
+
+#### 2.3.5 删除文档
+```javascript
+db.col.remove(
+   <query>, //（可选）删除的文档的条件
+   {
+     justOne: <boolean>, //（可选）如果设为 true 或 1，则只删除一个文档
+  		//如果不设置该参数，或使用默认值 false，则删除所有匹配条件的文档
+  
+     writeConcern: <document> //（可选）抛出异常的级别
+   }
+)
+```
+
+#### 2.3.6 查询文档
+- db.集合名.find( )
+```javascript
+db.col.find(
+  query,  //可选，查询条件。不写则返回集合的全部文档
+  projection //可选，使用投影操作符指定返回的键，比如{"key":1}为显示key
+)
+```
+
+- db.集合名.find( ).pretty()：以格式化的方式来显示所有文档
+- db.集合名.findOne( )：只返回符合查询条件的一个文档。find()返回的是数组，而findOne返回的是一个对象
