@@ -3,6 +3,7 @@
 参考：
 - [Mongoose实战开发-基础篇](https://juejin.cn/post/6844903509356183560)
 - [mongoose官网](https://mongoosejs.com/)
+- [晚到几天的mongodb事务](https://www.dazhuanlan.com/japril/topics/1023364)
 
 mongoose是对在node中使用mongodb的操作封装，可以更方便地在node环境中使用mongodb。
 
@@ -635,4 +636,360 @@ query.sort({ field: 'asc', test: -1 });
 
 // equivalent
 query.sort('field -test');
+```
+
+## 8.验证（validation）
+**需要注意的是：**
+- 验证定义在SchemaTypes里
+- 验证是一个中间件，默认作为 pre('save') 钩子注册在 schema 上
+- 验证是异步递归的。当你调用 Model#save，子文档验证也会执行，出错的话 Model#save 回调会接收错误
+
+**内建验证器：**
+- 所有类型都有required验证器
+- Numbers 有 min 和 max 验证器.
+- Strings 有 enum、 match、 maxlength 和 minlength 验证器
+- 更多查看前面SchemaTypes一节
+
+**自定义验证器：**
+- 在SchemaType里设置validate属性
+
+```javascript
+    var userSchema = new Schema({
+      phone: {
+        type: String,
+        //自定义验证器
+        validate: {
+          validator: function(v) {
+            return /\d{3}-\d{3}-\d{4}/.test(v);
+          },
+          message: '{VALUE} is not a valid phone number!' //如验证不成功返回的信息
+        },
+        required: [true, 'User phone number required']
+      }
+    });
+```
+
+如果不写返回信息，validate属性可以直接是验证函数而不是对象。
+
+## 9.中间件（middleware）
+中间件（pre、post钩子函数）是某些操作执行前会触发的控制函数，定义在Schema级别，如shema.pre('save', callback)。
+
+##### 中间件分类
+中间件分为四种：
+- document中间件：this指向document，其中间件支持以下操作
+  - init
+  - validate
+  - save
+  - updateOne
+  - deleteOne
+  - remove
+- model中间件：this指向model
+  - insertMany
+- aggregate中间件：this指向aggregate对象
+  - aggregate
+- query中间件：this指向query对象，query中间件支持以下Model和Query操作
+  - count
+  - countDocuments
+  - update
+  - updateOne
+  - deleteMany
+  - deleteOne
+  - remove
+  - find
+  - findOne
+  - findOneAndDelete
+  - findOneAndRemove
+  - findOneAndReplace
+  - findOneAndUpate
+  - replaceOne
+- 需要注意的是，document和query有相同的操作
+  - schema.pre('remove'，cb)，默认在document.remove上注册。如果想改为query.remove，使用schema.pre('remove'，{query: true, document: false}，cb)
+  - updateOne、deleteOne相反，默认在query上注册。
+  
+##### Pre钩子函数
+pre前钩子函数在操作执行前触发。
+通过调用next（），可以让中间件串行执行：
+
+```javascript
+const schema = new Schema(..);
+schema.pre('save', function(next) {
+  // do stuff
+  next(); //执行下一个中间件（注意都是同一操作的中间件，比如都是save）
+});
+```
+
+除了手动调用next，还可以返回一个promise、或使用async/await:
+
+```javascript
+schema.pre('save', function() {
+  return doStuff().
+    then(() => doMoreStuff());
+});
+
+// Or, in Node.js >= 7.6.0:
+schema.pre('save', async function() {
+  await doStuff();
+  await doMoreStuff();
+});
+```
+
+next（）不会阻止剩余代码的执行，想要提早结束可使用return:
+
+```javascript
+const schema = new Schema(..);
+schema.pre('save', function(next) {
+  if (foo()) {
+    console.log('calling next!');
+    // `return next();` will make sure the rest of this function doesn't run
+    /*return*/ next();
+  }
+  // Unless you comment out the `return` above, 'after next' will print
+  console.log('after next');
+});
+```
+
+错误处理：
+
+```javascript
+schema.pre('save', function(next) {
+  const err = new Error('something went wrong');
+	//将错误传递给next
+  next(err);
+});
+
+//或者直接抛出错误
+schema.pre('save', function() {
+  throw new Error('something went wrong');
+});
+
+
+//save操作将不会成功
+myDoc.save(function(err) {
+  console.log(err.message); // something went wrong
+});
+```
+
+##### Post钩子函数
+post后钩子函数在操作执行后触发：
+
+```javascript
+//回调的参数是操作对应的中间件类型对象
+schema.post('validate', function(doc) {
+  console.log('%s has been validated (but not saved yet)', doc._id);
+});
+
+
+
+//如果写上第二个参数，那么第二个参数会被认为是next
+//可以通过next触发下一中间件（注意都是同一操作的中间件）
+schema.post('save', function(doc, next) {
+  setTimeout(function() {
+    console.log('post1');
+    // Kick off the second post hook
+    next();
+  }, 10);
+});
+
+// Will not execute until the first middleware calls `next()`
+schema.post('save', function(doc, next) {
+  console.log('post2');
+  next();
+});
+```
+
+#### 注意save/validate钩子
+定义类型时如果设置了验证器validate，它实际上是pre('save')钩子。所以validate会在save之前执行。
+
+#### 错误处理中间件
+当中间件中抛出错误，或使用next（err）时，中间件停止执行。可以使用post中间件当作错误处理中间件，专门在发生错误时执行，可用于报告错误、使错误更具有可读性
+
+```javascript
+const schema = new Schema({
+  name: {
+    type: String,
+    // 重复时会触发MongoServerError，错误代码为11000
+    unique: true
+  }
+});
+
+// 错误处理中间件必须有3个参数:
+schema.post('save', function(error, doc, next) {
+  if (error.name === 'MongoServerError' && error.code === 11000) {
+    next(new Error('There was a duplicate key error'));
+  } else {
+    next();
+  }
+});
+
+// 触发 `post('save')`错误处理中间件
+Person.create([{ name: 'Axl Rose' }, { name: 'Axl Rose' }]);
+```
+
+## 10.插件（plugins）
+假如数据库里有很多个 collection，我们需要对它们都添加 记录“最后修改”的功能，可以使用插件实现。创建一次插件，然后应用到每个 Schema：
+
+```javascript
+// lastMod.js
+module.exports = exports = function lastModifiedPlugin (schema, options) {
+  schema.add({ lastMod: Date });
+
+  schema.pre('save', function (next) {
+    this.lastMod = new Date();
+    next();
+  });
+
+  if (options && options.index) {
+    schema.path('lastMod').index(options.index);
+  }
+}
+
+// game-schema.js
+var lastMod = require('./lastMod');
+var Game = new Schema({ ... });
+Game.plugin(lastMod, { index: true }); //要在生成model之前注册插件
+
+// player-schema.js
+var lastMod = require('./lastMod');
+var Player = new Schema({ ... });
+Player.plugin(lastMod);
+```
+
+想对所有schema注册插件，可以使用全局插件：
+
+```javascript
+var mongoose = require('mongoose');
+mongoose.plugin(require('./lastMod')); //全局插件注册在mongoose上
+
+var gameSchema = new Schema({ ... });
+var playerSchema = new Schema({ ... });
+// `lastModifiedPlugin` gets attached to both schemas
+var Game = mongoose.model('Game', gameSchema);
+var Player = mongoose.model('Player', playerSchema);
+```
+
+## 11.事务（transaction）
+事务是 MongoDB 4.0 和 Mongoose 5.2.0 中的新功能。 事务允许单独执行多个操作，如果其中一个操作失败，则会回滚撤消所有操作。
+
+使用事务前要创建session：
+
+```javascript
+const session = await mongoose.startSession();
+```
+如果想方便地使用事务，可以使用 session.withTransaction() 或 Connection#transaction()。
+
+第一种，session.withTransaction()所做的事：
+- 创建一个事务
+- 如果事务中所有操作成功则commit事务
+- 如果抛出错误则abort事务
+- 在发生瞬时事务错误时重试
+
+```javascript
+const session = await mongoose.startSession(); 
+
+await session.withTransaction(() => {
+  //Customer是model
+  return Customer.create([{ name: 'Test' }], { session: session })
+});
+
+const count = await Customer.countDocuments();
+assert.strictEqual(count, 1);
+
+session.endSession(); //要自己结束session
+```
+
+第二种，Connection#transaction()其实是session.withTransaction()的封装，它将 Mongoose 更改跟踪与事务集成在一起。使用Connection#transaction()：
+
+```javascript
+const db = mongoose.connect("mongodb://localhost:27017/mydb")
+db.transaction(async (session) => {
+  doc.arr.pull('bar');
+
+  await doc.save({ session });
+  doc.name = 'baz';
+  throw new Error('Oops');
+}).
+catch(err => {
+  assert.equal(err.message, 'Oops');
+});
+```
+
+如果不使用上面两种，而是想自己更细粒度地控制，使用session.startTransaction():
+
+```javascript
+const Customer = db.model('Customer', new Schema({ name: String }));
+
+const session = await db.startSession();
+session.startTransaction();
+
+// 事务的一部分
+await Customer.create([{ name: 'Test' }], { session: session });
+
+// 不是事务的一部分，不会执行
+let doc = await Customer.findOne({ name: 'Test' });
+assert.ok(!doc);
+
+//事务的一部分
+doc = await Customer.findOne({ name: 'Test' }).session(session);
+assert.ok(doc);
+
+// 事务提交之后，读写可执行
+await session.commitTransaction();
+doc = await Customer.findOne({ name: 'Test' });
+assert.ok(doc);
+
+session.endSession();
+```
+
+```javascript
+const User = mongoose.model('User', new mongoose.Schema({
+    firstName: String, lastName: String
+  }))
+
+  const transfer = async () => {
+    const session = mongoose.startSession()
+    session.startTransaction()
+    try {
+      const user = new User({firstName: 'alfieri'})
+      const result = await user.save()
+      await User.findOneAndUpdate({_id: result._id}, { $inc: { lastName: 'chou'}})
+      await session.commitTransaction() //-----------提交
+      session.endSession() //------------结束
+      return user
+    } catch (err) {
+      await session.abortTransaction() //------------放弃
+      session.endSession() //-------------结束
+      throw new Error('something went wrong')
+    }
+  }
+  transfer()
+```
+
+在mongodb的事务中，也是类似：
+
+```javascript
+const { MongoClient } = require('mongodb')
+const uri = 'mongodb://127.0.0.1:27017'
+const client = await MongoClient.connect(uri, { useNewUrlParser: true})
+const db = client.db('mydb')
+  
+const demo = async () => {
+  const transfer = async () => {
+    const session = client.startSession()
+    session.startTransaction()
+    try {
+      const user = await db.collection('users').insert({firstName: 'alfieri'})
+      await db.collection('users').findOneAndUpdate({_id: user._id}, { $inc: { lastName: 'chou'}})
+      await session.commitTransaction()
+      session.endSession()
+      return user
+    } catch (err) {
+      await session.abortTransaction()
+      session.endSession()
+      throw new Error('something went wrong')
+    }
+  }
+
+  transfer()
+}
+demo()
 ```
