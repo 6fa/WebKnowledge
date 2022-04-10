@@ -12,6 +12,7 @@
 ##### [3. DOMContentLoaded事件](JS基础/DOMContentLoaded事件.md)
 ##### [4. JS作用域](JS基础/JS作用域.md)
 ##### [5. ES6中的Class](JS基础/ES6中的Class.md)
+##### [6. 执行上下文](JS基础/执行上下文.md)
 
 ## 红宝书笔记
 《JavaScript高级程序设计（第四版）》的一些内容总结
