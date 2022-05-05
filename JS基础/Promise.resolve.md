@@ -2,9 +2,9 @@
 
 
 参考：
-- [https://segmentfault.com/a/1190000020980101](Promise.resolve()与new Promise(r => r(v)))
-- [https://segmentfault.com/q/1010000021636481](new Promise((resolve)=>{resolve()}) 与 Promise.resolve() 等价吗)
-- [https://zhuanlan.zhihu.com/p/86993504](探讨：当Async/Await的遇到了EventLoop)
+- [Promise.resolve()与new Promise(r => r(v))](https://segmentfault.com/a/1190000020980101)
+- [new Promise((resolve)=>{resolve()}) 与 Promise.resolve() 等价吗](https://segmentfault.com/q/1010000021636481)
+- [探讨：当Async/Await的遇到了EventLoop](https://zhuanlan.zhihu.com/p/86993504)
 
 ### 返回值
 如果参数是promise实例，前者返回新期约，后者原样返回：
