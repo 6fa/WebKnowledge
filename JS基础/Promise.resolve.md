@@ -129,6 +129,7 @@ console.log("script end")
 - 这是因为浏览器发现resolve的是另一个promise时（假设称原promise为promiseA，另一个promise为promiseB），会创建一个名为 PromiseResolveThenableJob的任务去处理promiseB，而这个任务是一个微任务
 - 等到promiseB被resolved之后，会再生成去处理promiseA（resolvePromiseA）的微任务
 - 执行完resolvePromiseA微任务，才会执行promiseA的then，因此推迟了两个事件循环
+- 而Promise.resolve()的then正常执行，是因为参数是promiseB时，会不做处理返回promiseB本身
 
 可以用伪代码将PromiseResolveThenableJob表示为：
 ```javascript
