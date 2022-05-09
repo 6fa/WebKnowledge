@@ -14,6 +14,7 @@
 ##### [5. ES6中的Class](JS基础/ES6中的Class.md)
 ##### [6. 执行上下文](JS基础/执行上下文.md)
 ##### [7. Promise.resolve()与new Promise(resolve=>resolve())的区别](JS基础/Promise.resolve.md)
+##### [8. JS设计模式总结](JS基础/JS设计模式总结.md)
 
 ## 红宝书笔记
 《JavaScript高级程序设计（第四版）》的一些内容总结
